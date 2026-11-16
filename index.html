@@ -1,0 +1,1566 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>브레드보드 연습장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: 위쪽 선반에 계기 3대, 아래에 세로 하프 보드 2개(왼쪽 넓게) + 오른쪽에 고정된 회로도·계기·부품 패널 */
+:root{
+  --mat:#d8e0e2; --mat-grid:rgba(40,70,80,.07); --panel:#f7f9f9; --field:#ffffff;
+  --ink:#17262b; --muted:#566b72; --line:#c5d1d4;
+  --accent:#17768a; --accent-ink:#ffffff; --accent-soft:rgba(23,118,138,.12);
+  --danger:#b93e2a; --warn:#b4480f; --sel:#2b9ad8; --s-pos:#c53a2d; --s-neg:#2f5fbf; --s-earth:#2f8a4a;
+  /* 보드·계기(실물이라 두 테마 공통) */
+  --board:#f4f2eb; --board-edge:#d3cdbc; --channel:#e1dccd; --hole:#38372f; --label:#8b8573; --ink-board:#2b2a24;
+  --clip:rgba(132,146,150,.22); --hl:rgba(24,160,110,.42); --hl-line:#13875c; --hl2:rgba(24,160,110,.16);
+  --rail-red:#cf4436; --rail-blue:#2f60c2; --r-body:#d9be8d; --r-edge:#9c8053; --lead:#9aa1a7;
+  --metal:#c6cbcf; --metal-edge:#7d858b; --wire-edge:rgba(20,20,20,.45); --warn-board:#c2410c; --danger-board:#d0331f;
+  --inst:#dfe3e6; --inst-edge:#a3abb1; --inst-sub:#cdd3d7; --inst-ink:#262d32; --inst-muted:#59636a;
+  --disp:#141414; --seg-r:#ff4b36; --seg-g:#3ee26a; --lcd:#0e1c22; --lcd-ink:#a6ecff;
+  --scr:#07090a; --grid:#283033; --grid-ax:#465055; --ch1:#f4d000; --ch2:#37d455; --scr-ink:#d8dde0;
+  --ibtn:#f4f6f7; --ibtn-on:#2b6fd6; --knob:#2a2d31; --led-off:#3b3f42;
+  --f-ui:"IBM Plex Sans KR",system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-seg:"Share Tech Mono","IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --mat:#142023; --mat-grid:rgba(160,200,210,.05); --panel:#1c2a2e; --field:#14211f;
+    --ink:#e2ebed; --muted:#93a8ae; --line:#304348;
+    --accent:#4bb6c8; --accent-ink:#06191d; --accent-soft:rgba(75,182,200,.15);
+    --danger:#f08066; --warn:#fb9a5c; --sel:#5ec3f2; --s-pos:#f07a6c; --s-neg:#7ea6f2; --s-earth:#6fd08a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --mat:#142023; --mat-grid:rgba(160,200,210,.05); --panel:#1c2a2e; --field:#14211f;
+  --ink:#e2ebed; --muted:#93a8ae; --line:#304348;
+  --accent:#4bb6c8; --accent-ink:#06191d; --accent-soft:rgba(75,182,200,.15);
+  --danger:#f08066; --warn:#fb9a5c; --sel:#5ec3f2; --s-pos:#f07a6c; --s-neg:#7ea6f2; --s-earth:#6fd08a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  background-color:var(--mat);
+  background-image:linear-gradient(var(--mat-grid) 1px,transparent 1px),linear-gradient(90deg,var(--mat-grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--f-ui); font-size:14px; line-height:1.5;
+}
+.app{max-width:1600px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.sub{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{font:500 14px var(--f-ui);color:var(--ink);background:transparent;border:0;border-radius:7px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.seg button:hover{background:var(--accent-soft)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+kbd{font:500 11px var(--f-mono);border:1px solid currentColor;border-radius:4px;padding:0 4px;opacity:.6}
+.toggle{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px;cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.spacer{flex:1}
+.btn{font:500 14px var(--f-ui);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 14px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.danger{color:var(--danger)}
+.btn.danger:hover{border-color:var(--danger)}
+.btn.solid-danger{background:var(--danger);border-color:var(--danger);color:var(--panel)}
+.btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.confirm{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--danger);border-radius:10px;padding:4px 4px 4px 12px}
+.confirm .btn{padding:5px 12px}
+button:focus-visible,input:focus-visible,.toggle:focus-within{outline:2px solid var(--sel);outline-offset:2px}
+
+.work{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(340px,1fr);gap:14px;align-items:start}
+.right{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start;border-radius:14px}
+.right .panel{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));align-items:start}
+@media (max-width:1000px){
+  .work{grid-template-columns:minmax(0,1fr)}
+  .right{position:static;max-height:none;overflow:visible}
+}
+.board-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 12px 12px;display:grid;gap:8px;min-width:0}
+.board-head{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;background:var(--panel);padding:10px 4px 8px;border-bottom:1px solid var(--line);display:grid;gap:6px;border-radius:14px 14px 0 0}
+#bb{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.status{font-size:13px;color:var(--muted);min-height:3em}
+.status b{color:var(--ink);font-weight:500}
+.status code,.pos-line code,.item .pos{font-family:var(--f-mono)}
+.status code{color:var(--ink);background:var(--accent-soft);border-radius:4px;padding:0 4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:10px;border-radius:3px;display:inline-block}
+.lg-hl{background:var(--hl);border:1px solid var(--hl-line)}
+.lg-hl2{background:var(--hl2);border:1px dashed var(--hl-line)}
+.lg-clip{background:var(--clip);border:1px solid var(--line)}
+
+/* SVG 보드 */
+.b-body{fill:var(--board);stroke:var(--board-edge);stroke-width:1.5}
+.b-channel{fill:var(--channel)}
+.rail-red{stroke:var(--rail-red);stroke-width:2}
+.rail-blue{stroke:var(--rail-blue);stroke-width:2}
+.sign{font:700 15px var(--f-mono);text-anchor:middle}
+.sign-red{fill:var(--rail-red)} .sign-blue{fill:var(--rail-blue)}
+.colnum,.rowlet{font:500 8.5px var(--f-mono);fill:var(--label);text-anchor:middle}
+.boardlab{font:700 13px var(--f-mono);fill:var(--label);text-anchor:middle}
+.strip{fill:var(--clip);opacity:0;transition:opacity .12s}
+.show-strips .strip{opacity:1}
+.strip.hl{opacity:1;fill:var(--hl);stroke:var(--hl-line);stroke-width:1}
+.strip.hl2{opacity:1;fill:var(--hl2);stroke:var(--hl-line);stroke-width:.8;stroke-dasharray:3 2}
+.hole{fill:var(--hole)}
+.hover-ring{fill:none;stroke:var(--sel);stroke-width:1.8;pointer-events:none}
+.comp{cursor:grab}
+.dragging,.dragging .comp{cursor:grabbing}
+.placing{cursor:crosshair}
+.placing .comp{pointer-events:none}
+.lead{stroke:var(--lead);stroke-width:1.6;stroke-linecap:round}
+.r-body{fill:var(--r-body);stroke:var(--r-edge);stroke-width:.8}
+.tip{fill:var(--metal);stroke:var(--metal-edge);stroke-width:.5}
+.w-out{fill:none;stroke:var(--wire-edge);stroke-width:6.2;stroke-linecap:round}
+.w-core{fill:none;stroke-width:4.2;stroke-linecap:round}
+.hit{fill:none;stroke:transparent;stroke-width:14;stroke-linecap:round;pointer-events:stroke}
+.halo{fill:none;stroke:var(--sel);stroke-opacity:.45;stroke-width:15;stroke-linecap:round;pointer-events:none}
+.r-label{font:600 8.5px var(--f-mono);fill:var(--ink-board);paint-order:stroke;stroke:var(--board);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+.r-label.warn{fill:var(--warn-board)}
+.ghost{opacity:.55;pointer-events:none}
+.bad{opacity:.6}
+.bad .w-out,.bad .lead{stroke:var(--danger-board)}
+.bad .r-body{stroke:var(--danger-board);stroke-width:1.6}
+.handle{fill:var(--board);stroke:var(--sel);stroke-width:2.2;cursor:move}
+.pend{fill:none;stroke:var(--sel);stroke-width:2.2;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{stroke-opacity:.25}}
+@media (prefers-reduced-motion:reduce){.pend{animation:none}.strip{transition:none}}
+
+/* SVG 계기 */
+.inst{fill:var(--inst);stroke:var(--inst-edge);stroke-width:1.2}
+.inst-sub{fill:var(--inst-sub)}
+.inst-title{font:700 11px var(--f-ui);fill:var(--inst-ink)}
+.inst-model{font:600 9.5px var(--f-mono);fill:var(--inst-muted)}
+.inst-lab{font:700 9px var(--f-mono);fill:var(--inst-ink);text-anchor:middle}
+.inst-small{font:500 7.5px var(--f-ui);fill:var(--inst-muted)}
+.inst-warn{font:700 8.5px var(--f-ui);fill:var(--danger-board)}
+.disp{fill:var(--disp)}
+.seg7{font:400 23px var(--f-seg);text-anchor:end}
+.seg7.r{fill:var(--seg-r)} .seg7.g{fill:var(--seg-g)} .seg7.dim{opacity:.45}
+.seg-u{font:600 9px var(--f-mono);fill:#8d969b}
+.led{fill:var(--led-off)} .led.on-g{fill:var(--seg-g)} .led.on-r{fill:var(--seg-r)}
+.knob{fill:var(--knob);stroke:#111;stroke-width:1}
+.knob-in{fill:#3d4248}
+.knob-ind{stroke:#f2f2f2;stroke-width:2;stroke-linecap:round}
+[data-ctl]{cursor:pointer}
+[data-ctl="knob"]{cursor:ns-resize}
+.ibtn{fill:var(--ibtn);stroke:var(--inst-edge);stroke-width:1}
+.ibtn.on{fill:var(--ibtn-on);stroke:var(--ibtn-on)}
+.ibtn-t{font:600 9px var(--f-mono);fill:var(--inst-ink);text-anchor:middle;pointer-events:none}
+.ibtn.on + .ibtn-t{fill:#ffffff}
+[data-ctl]:hover .ibtn:not(.on){fill:#e3eef9}
+.lcd{fill:var(--lcd)}
+.lcd-big{font:400 34px var(--f-seg);fill:var(--lcd-ink);text-anchor:end}
+.lcd-u{font:600 14px var(--f-mono);fill:var(--lcd-ink)}
+.lcd-s{font:500 9px var(--f-mono);fill:var(--lcd-ink);opacity:.8}
+.lcd-m{font:400 13px var(--f-seg);fill:var(--lcd-ink);opacity:.8}
+.lcd-m.lcd-sel{opacity:1;fill:#ffffff;text-decoration:underline}
+.band{opacity:.4} .band.k1{fill:var(--ch1)} .band.k2{fill:var(--ch2)}
+.psu-set.gen-set{grid-template-columns:auto 1fr auto}
+.scr{fill:var(--scr)}
+.grid{stroke:var(--grid);stroke-width:.6}
+.grid.ax{stroke:var(--grid-ax)}
+.tr{fill:none;stroke-width:1.6;stroke-linejoin:round}
+.tr.k1{stroke:var(--ch1)} .tr.k2{stroke:var(--ch2)}
+.c1{fill:var(--ch1)} .c2{fill:var(--ch2)} .cw{fill:var(--scr-ink)}
+.sc-t{font:600 8px var(--f-mono)}
+.ibtn.ch1on{fill:var(--ch1);stroke:var(--ch1)} .ibtn.ch2on{fill:var(--ch2);stroke:var(--ch2)}
+.jack{stroke:#1d1f21;stroke-width:1.5}
+.jack-hole{fill:#151515;pointer-events:none}
+.bnc{fill:#b9bfc4;stroke:#6d757b;stroke-width:1}
+.cable{stroke:#3a3f43;stroke-width:2.2;fill:none;stroke-linecap:round}
+
+/* 카드·패널 */
+.panel{display:grid;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;min-width:0}
+.card h2{margin:0;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 small{font:500 12px var(--f-mono)}
+.lbl{font-size:12px;color:var(--muted);font-weight:500}
+.field{display:grid;gap:6px}
+.txt{font:500 15px var(--f-mono);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.txt[aria-invalid="true"]{border-color:var(--danger)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12px var(--f-mono);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 9px;cursor:pointer}
+.chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.err{margin:0;font-size:12px;color:var(--danger)}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
+.sel-title{display:flex;align-items:baseline;gap:8px}
+.sel-title b{font:600 18px var(--f-mono)}
+.sel-title span{color:var(--muted);font-size:13px}
+.bands{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12px;color:var(--muted)}
+.band{display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
+.band i{width:10px;height:16px;border-radius:2px;border:1px solid var(--line);display:inline-block}
+.warnline{margin:0;font-size:12px;color:var(--warn)}
+.pos-line{margin:0;font-size:13px;color:var(--muted)}
+.pos-line code{color:var(--ink)}
+.empty{margin:0;color:var(--muted);font-size:13px}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.item{width:100%;display:grid;grid-template-columns:14px 30px minmax(0,1fr) auto;align-items:center;gap:8px;text-align:left;font:13px var(--f-ui);color:var(--ink);background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 8px;cursor:pointer}
+.item:hover{background:var(--accent-soft)}
+.item.on{background:var(--accent-soft);border-color:var(--accent)}
+.item .nm{font:600 13px var(--f-mono)}
+.item .val{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .pos{font-size:12px;color:var(--muted);white-space:nowrap}
+.item .tag{color:var(--warn);font-size:11px;font-weight:700;margin-left:4px}
+.ico{width:14px;height:8px;border-radius:4px;display:inline-block;border:1px solid var(--line)}
+.ico.res{background:var(--r-body);border-color:var(--r-edge)}
+.ico.wire{height:4px;border-radius:2px}
+.banner{margin:0;font-size:12px;color:var(--ink);background:var(--accent-soft);border-radius:8px;padding:8px 10px}
+.help ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.help b{color:var(--ink);font-weight:500}
+.ro{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.ro dt{color:var(--muted)}
+.ro dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.ro dd.cc{color:var(--warn)}
+.psu-set{display:grid;grid-template-columns:auto 1fr auto 1fr auto;gap:6px 6px;align-items:center;font-size:12px;color:var(--muted)}
+.num{font:500 13px var(--f-mono);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%;min-width:0}
+.wlist{margin:0;padding-left:18px;display:grid;gap:3px;font-size:13px;color:var(--warn)}
+.okline{margin:0;font-size:13px;color:var(--hl-line)}
+
+/* 회로도 */
+.schem-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--field);padding:8px;min-height:180px;display:grid;place-items:center}
+#schem{display:block;max-width:100%;height:auto}
+.s-wire{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.s-nethit{stroke:transparent;stroke-width:12;fill:none}
+.s-net{cursor:help}
+.s-net:hover .s-wire{stroke:var(--hl-line);stroke-width:2.4}
+.s-dot{fill:var(--ink)}
+.s-term{fill:var(--field);stroke:var(--ink);stroke-width:1.5}
+.s-open{fill:var(--field);stroke:var(--warn);stroke-width:1.8}
+.s-node{font:500 10px var(--f-mono);fill:var(--muted)}
+.s-node.pos{fill:var(--s-pos);font-weight:600}
+.s-node.neg{fill:var(--s-neg);font-weight:600}
+.s-node.open{fill:var(--warn)}
+.s-volt{font:600 10px var(--f-mono);fill:var(--accent)}
+.s-earth{stroke:var(--s-earth);stroke-width:1.6;fill:none}
+.s-lbl{font:600 11px var(--f-mono);fill:var(--ink)}
+.s-val{font:500 10.5px var(--f-mono);fill:var(--muted)}
+.s-cur{font:500 9.5px var(--f-mono);fill:var(--accent)}
+.s-res{cursor:pointer}
+.s-hit{fill:transparent}
+.s-res:hover .s-wire{stroke-width:2.2}
+.s-res.sel .s-wire{stroke:var(--sel);stroke-width:2.4}
+.s-res.sel .s-lbl{fill:var(--sel)}
+.s-res.warn .s-wire{stroke:var(--warn)}
+.s-res.warn .s-lbl{fill:var(--warn)}
+.s-src{stroke:var(--ink);stroke-width:1.6;fill:none}
+.s-src.short{stroke-width:3.4}
+.s-srclbl{font:600 10.5px var(--f-mono);fill:var(--ink)}
+.schem-info{display:grid;gap:4px;font-size:13px}
+.schem-info ul{margin:0;padding-left:18px;display:grid;gap:3px}
+.schem-info .w{color:var(--warn)}
+.schem-info .ok{color:var(--hl-line)}
+.schem-info .note{color:var(--muted);font-size:12px;margin:0}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);background:var(--ink);color:var(--panel);padding:9px 14px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;max-width:calc(100% - 32px);z-index:20}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+html{color-scheme:light}
+body{margin:0}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>브레드보드 연습장</h1>
+    <span class="sub">하프 보드 ①② · 전원공급기 · 함수발생기 · 멀티미터 · 오실로스코프 · 측정 연습</span>
+  </header>
+
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="도구">
+      <button type="button" data-mode="select" aria-pressed="true">선택·이동 <kbd>V</kbd></button>
+      <button type="button" data-mode="res" aria-pressed="false">저항 놓기 <kbd>R</kbd></button>
+      <button type="button" data-mode="wire" aria-pressed="false">점퍼선·리드선 <kbd>W</kbd></button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="showStrips" checked> 내부 연결 구조 보기</label>
+    <span class="spacer"></span>
+    <button type="button" class="btn danger" id="resetBtn">전체 초기화</button>
+    <span class="confirm" id="resetConfirm" hidden>
+      모든 부품과 리드선을 지울까요?
+      <button type="button" class="btn solid-danger" id="resetYes">모두 지우기</button>
+      <button type="button" class="btn" id="resetNo">취소</button>
+    </span>
+  </div>
+
+  <div class="work">
+    <section class="board-card" aria-label="실험대">
+      <div class="board-head">
+        <div class="status" id="status"></div>
+        <div class="legend">
+          <span><i class="lg-clip"></i>내부 금속 클립</span>
+          <span><i class="lg-hl"></i>같은 줄</span>
+          <span><i class="lg-hl2"></i>점퍼선으로 이어진 줄</span>
+        </div>
+      </div>
+      <svg id="bb" class="show-strips" role="img" aria-label="계기와 브레드보드 작업 영역"></svg>
+    </section>
+
+    <div class="right">
+      <section class="card" aria-label="회로도">
+        <h2>회로도 <small id="schemCount"></small></h2>
+        <div class="schem-wrap">
+          <svg id="schem" role="img" aria-label="배치에 따른 회로도"></svg>
+          <p class="empty" id="schemEmpty" hidden>저항을 배치하면 연결 상태에 맞춰 회로도가 여기에 그려집니다.</p>
+        </div>
+        <div class="schem-info" id="schemInfo"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="card">
+          <h2>계기 측정값 <small id="outState"></small></h2>
+          <dl class="ro" id="readouts"></dl>
+          <ul class="wlist" id="instWarn"></ul>
+          <span class="lbl">전원공급기 설정 (손잡이를 끌거나 휠로도 조절)</span>
+          <div class="psu-set">
+            <span>CH1</span><input id="in_v1" class="num" type="number" min="0" max="30" step="0.01" aria-label="CH1 전압"><span>V</span><input id="in_i1" class="num" type="number" min="0.001" max="5" step="0.001" aria-label="CH1 전류 제한"><span>A</span>
+            <span>CH2</span><input id="in_v2" class="num" type="number" min="0" max="30" step="0.01" aria-label="CH2 전압"><span>V</span><input id="in_i2" class="num" type="number" min="0.001" max="5" step="0.001" aria-label="CH2 전류 제한"><span>A</span>
+          </div>
+          <button type="button" class="btn" id="outBtn">전원 출력 켜기</button>
+          <span class="lbl">멀티미터 기능</span>
+          <div class="chips" id="dmmFns"></div>
+          <button type="button" class="btn danger" id="fuseBtn" hidden>멀티미터 mA 퓨즈 교체</button>
+          <span class="lbl">신호발생기 (손잡이는 FREQ·AMPL·OFST 중 고른 값을 조절)</span>
+          <div class="chips" id="genWaves"></div>
+          <div class="psu-set gen-set">
+            <span>주파수</span><input id="in_gf" class="num" type="text" autocomplete="off" spellcheck="false" aria-label="주파수 (예: 1k, 2.5k, 100)"><span>Hz</span>
+            <span>진폭</span><input id="in_ga" class="num" type="number" min="0.001" max="20" step="0.001" aria-label="진폭"><span>Vpp</span>
+            <span>오프셋</span><input id="in_go" class="num" type="number" min="-10" max="10" step="0.01" aria-label="오프셋"><span>V</span>
+          </div>
+          <div class="chips" id="genLoads"></div>
+          <p class="note" style="margin:0;font-size:12px;color:var(--muted)">50Ω 기준: 표시 진폭은 50Ω 부하에 걸리는 값이라, 개방(High-Z) 회로에서는 실제로 약 2배가 나와요.</p>
+          <button type="button" class="btn" id="genOutBtn">신호 출력 켜기</button>
+        </div>
+
+        <div class="card">
+          <h2>선택한 부품</h2>
+          <div id="selBox" class="field"></div>
+        </div>
+
+        <div class="card">
+          <h2>새 부품 설정</h2>
+          <div class="field">
+            <label class="lbl" for="newValue">새 저항값</label>
+            <input id="newValue" class="txt" type="text" value="220Ω" autocomplete="off" spellcheck="false">
+            <div class="chips" data-target="new"></div>
+            <p class="err" id="newErr" hidden></p>
+          </div>
+          <div class="field">
+            <span class="lbl">점퍼선 색 (계기 단자에서 시작하면 단자 색을 따라감)</span>
+            <div class="swatches" id="wireColors" role="group" aria-label="점퍼선 색"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>부품 목록 <small id="count"></small></h2>
+          <p class="banner" id="exNote" hidden>예시: 전원 CH1(5V) → R1 1kΩ → R2 2.2kΩ 전압 분배. CH1 −는 GND에 접지했고, 멀티미터와 스코프 CH1이 R1·R2 사이 노드를 재고 있어요. ‘전체 초기화’로 지울 수 있어요.</p>
+          <ul class="list" id="list"></ul>
+        </div>
+
+        <div class="card help">
+          <h2>조작법</h2>
+          <ul>
+            <li><b>리드선</b>: ‘점퍼선·리드선’ 도구로 계기 단자(동그란 잭)와 보드 구멍을 이어요. 단자 하나에 여러 가닥을 꽂을 수 있어요.</li>
+            <li><b>전원</b>: 손잡이를 위아래로 끌거나 마우스 휠로 전압·전류 제한을 바꾸고 OUTPUT으로 켜고 끕니다.</li>
+            <li><b>접지</b>: 전원 GND(초록) 단자와 스코프 접지클립은 기기 안에서 대지에 연결돼 있어요. CH1 −를 GND에 이으면 회로가 접지됩니다.</li>
+            <li><b>신호발생기</b>: 파형(Sine/Squ/Tri)을 고르고 FREQ·AMPL·OFST 버튼으로 바꿀 값을 정한 뒤 손잡이로 조절해요. 검정 클립은 접지예요.</li>
+            <li><b>스코프</b>: ▲▼로 V/div, ◀▶로 시간축, DC/AC로 입력 결합을 바꾸고, Auto Scale로 한 번에 맞춰요.</li>
+            <li><b>멀티미터</b>: 전압·저항은 VΩ–COM, 전류는 mA(또는 10A)–COM에 꽂고 회로에 직렬로 넣어요.</li>
+            <li><b>저항·점퍼선</b>: 시작 구멍 클릭 → 끝 구멍 클릭. 끌어서 놓아도 됩니다.</li>
+            <li><b>이동·삭제</b>: 몸통을 끌면 통째로, 끝 동그라미를 끌면 한쪽만 이동. <kbd>Delete</kbd>로 삭제, <kbd>Esc</kbd>는 취소.</li>
+            <li>배치와 계기 설정은 이 브라우저에 자동 저장됩니다.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  /* ---------- 구조: 위 선반(계기) + 아래 보드 2개 ---------- */
+  const P = 20, N = 30, L0 = 50, BW = 420, BH = L0 * 2 + (N - 1) * P, GAP = 14, VW = BW * 2 + GAP;
+  const BY = 520, VH = BY + BH, JY = 246, R2 = 296, JY2 = 476;
+  const RT = ['a','b','c','d','e'], RB = ['f','g','h','i','j'];
+  const XT = [100,120,140,160,180], XB = [240,260,280,300,320];
+  const RAILS = [
+    {k:'tp', side:'좌', x:32,  s:'+', rail:'p'},
+    {k:'tn', side:'좌', x:52,  s:'−', rail:'n'},
+    {k:'bp', side:'우', x:368, s:'+', rail:'p'},
+    {k:'bn', side:'우', x:388, s:'−', rail:'n'}
+  ];
+  const BOARDS = [{px:'', lab:'①', ox:0}, {px:'2', lab:'②', ox:BW + GAP}];
+  const rowY = c => BY + L0 + (c - 1) * P;
+  const holes = [], HM = {}, strips = {};
+  function addHole(id, x, y, strip, label, extra){ const h = Object.assign({id, x, y, strip, label: label || id}, extra || {}); holes.push(h); HM[id] = h; }
+  function addStrip(id, o){ strips[id] = Object.assign({id, rank: 0}, o); }
+  BOARDS.forEach((B, bi) => {
+    for (let c = 1; c <= N; c++){
+      const y = rowY(c);
+      RT.forEach((r,i) => addHole(B.px + r + c, B.ox + XT[i], y, B.px + 'T' + c, B.lab + r + c));
+      RB.forEach((r,i) => addHole(B.px + r + c, B.ox + XB[i], y, B.px + 'B' + c, B.lab + r + c));
+      RAILS.forEach(rl => addHole(B.px + rl.k + c, B.ox + rl.x, y, B.px + 'R' + rl.k, `${B.lab}${rl.side}${rl.s}${c}`));
+      addStrip(B.px + 'T' + c, {x:B.ox + XT[0] - 7, y:y - 6, w:XT[4] - XT[0] + 14, h:12, desc:`${B.lab}보드 a${c}–e${c} (가로 5구멍)`, name:`${B.lab}${c}행 a–e`, rank:c + bi * 100});
+      addStrip(B.px + 'B' + c, {x:B.ox + XB[0] - 7, y:y - 6, w:XB[4] - XB[0] + 14, h:12, desc:`${B.lab}보드 f${c}–j${c} (가로 5구멍)`, name:`${B.lab}${c}행 f–j`, rank:c + bi * 100});
+    }
+    RAILS.forEach(rl => addStrip(B.px + 'R' + rl.k, {x:B.ox + rl.x - 6, y:rowY(1) - 7, w:12, h:rowY(N) - rowY(1) + 14,
+      desc:`${B.lab}보드 ${rl.side}측 ${rl.s} 레일 전체 (세로 ${N}구멍)`, name:`${B.lab}${rl.side}${rl.s} 레일`, rail:rl.rail, rank:bi * 100}));
+  });
+
+  /* 계기 단자(잭) */
+  addStrip('EARTH', {desc:'접지(대지). 전원 GND 단자, 신호발생기 검정 클립, 스코프 접지클립은 기기 안에서 모두 대지에 연결돼 있어요.', name:'접지', earth:true, rank:0});
+  const JACKS = [
+    ['psu1n',  30, JY,  '전원 CH1 −', 'black',  {psu:'n'}],
+    ['psu1p',  62, JY,  '전원 CH1 +', 'red',    {psu:'p'}],
+    ['psug',  110, JY,  '전원 GND(⏚)', 'green', 'EARTH'],
+    ['psu2n', 158, JY,  '전원 CH2 −', 'black',  {psu:'n'}],
+    ['psu2p', 190, JY,  '전원 CH2 +', 'red',    {psu:'p'}],
+    ['psu3n', 250, JY,  '전원 CH3 −', 'black',  {psu:'n'}],
+    ['psu3p', 282, JY,  '전원 CH3 +(5V)', 'red', {psu:'p'}],
+    ['sc1',   684, JY,  '스코프 CH1 프로브', 'yellow'],
+    ['sc1g',  716, JY,  '스코프 CH1 접지클립', 'black', 'EARTH'],
+    ['sc2',   784, JY,  '스코프 CH2 프로브', 'green'],
+    ['sc2g',  816, JY,  '스코프 CH2 접지클립', 'black', 'EARTH'],
+    ['genp',   96, JY2, '신호발생기 출력(빨강 클립)', 'red', {gen:true}],
+    ['geng',  128, JY2, '신호발생기 접지(검정 클립)', 'black', 'EARTH'],
+    ['dmmv',  378, JY2, '멀티미터 VΩ', 'red'],
+    ['dmmcom',433, JY2, '멀티미터 COM', 'black'],
+    ['dmmma', 488, JY2, '멀티미터 mA', 'red'],
+    ['dmma10',543, JY2, '멀티미터 10A', 'red']
+  ];
+  JACKS.forEach(([id, x, y, label, color, extra]) => {
+    let strip;
+    if (extra === 'EARTH') strip = 'EARTH';
+    else { strip = 'J' + id; addStrip(strip, Object.assign({desc:'계기 단자 (리드선 여러 가닥 연결 가능)', name: label.replace(/\(.*\)/, '') + ' 단자', rank: (id.startsWith('psu') || id === 'genp') ? 0 : 300}, extra || {})); }
+    addHole(id, x, y, strip, label, {jack:true, jcolor:color});
+  });
+
+  /* ---------- 부품 데이터 ---------- */
+  const WC = {
+    red:{name:'빨강',hex:'#d63a2f'}, black:{name:'검정',hex:'#262626'}, blue:{name:'파랑',hex:'#2e68d6'},
+    green:{name:'초록',hex:'#2f9d52'}, yellow:{name:'노랑',hex:'#e9be22'}, orange:{name:'주황',hex:'#ea7b1d'},
+    white:{name:'흰색',hex:'#f3f3f1'}
+  };
+  const PRESETS = ['100Ω','220Ω','330Ω','1kΩ','2.2kΩ','4.7kΩ','10kΩ'];
+  const BC = [['검정','#1c1c1c'],['갈색','#7b4a26'],['빨강','#d1352b'],['주황','#ec7a1c'],['노랑','#f1cf2a'],['초록','#2f9a4b'],['파랑','#2d63c8'],['보라','#7b4bbf'],['회색','#8b8b8b'],['흰색','#f4f4f4']];
+  const GOLD = ['금색','#c9a43a'], SILVER = ['은색','#b8bcc2'];
+  function parseR(str){
+    if (str == null) return null;
+    let t = String(str).trim().replace(/\s+/g,'').replace(/(Ω|Ω|ohms?|옴)$/i,'');
+    let m = t.match(/^(\d+)([rkm])(\d+)$/i);
+    if (m){ const v = parseFloat(m[1] + '.' + m[3]) * {r:1,k:1e3,m:1e6}[m[2].toLowerCase()]; return v > 0 && v <= 1e9 ? v : null; }
+    m = t.match(/^(\d+(?:\.\d+)?|\.\d+)([km]?)$/i);
+    if (!m) return null;
+    const v = parseFloat(m[1]) * {'':1,k:1e3,m:1e6}[m[2].toLowerCase()];
+    return v > 0 && v <= 1e9 ? v : null;
+  }
+  const trim3 = n => (+n.toPrecision(3)).toString();
+  function fmt(v){ if (v >= 1e6) return trim3(v/1e6) + 'MΩ'; if (v >= 1e3) return trim3(v/1e3) + 'kΩ'; return trim3(v) + 'Ω'; }
+  function bands(v){
+    let e = Math.floor(Math.log10(v)) - 1, d = Math.round(v / Math.pow(10, e));
+    if (d >= 100){ d = Math.round(d / 10); e++; }
+    if (d < 10){ d *= 10; e--; }
+    const mult = (e >= 0 && e <= 9) ? BC[e] : e === -1 ? GOLD : e === -2 ? SILVER : null;
+    if (!mult) return null;
+    return {list:[BC[Math.floor(d/10)], BC[d % 10], mult, GOLD], approx: d * Math.pow(10, e)};
+  }
+  const fmtV = v => Math.abs(v) < 1 ? (v * 1000).toFixed(1) + ' mV' : v.toFixed(3) + ' V';
+  const fmtI = i => { const a = Math.abs(i); return a < 1e-3 ? (i * 1e6).toFixed(1) + ' µA' : a < 1 ? (i * 1e3).toFixed(3) + ' mA' : i.toFixed(4) + ' A'; };
+
+  /* ---------- 상태 ---------- */
+  const KEY = 'breadboard-practice-v2';
+  const DEF_INST = {out:true, v1:5, i1:0.1, v2:0, i2:0.1, dmm:'dcv', fuse:false, on1:true, on2:false, vd1:1, vd2:1,
+    cp1:'DC', cp2:'DC', td:2e-4, gwave:'sine', gf:1000, ga:1, go:0, gout:false, gsel:'f', gload:'50'};
+  let inst = {...DEF_INST};
+  let comps = [], selId = null, mode = 'select', pending = null, downHole = null, hover = null, drag = null, schemFocus = null, knobDrag = null;
+  let newVal = 220, wireColor = 'red', example = false, sol = null;
+  const EXAMPLE = [
+    {id:'e1', type:'wire', a:'tp3',  b:'a3',  color:'red',    name:'W1'},
+    {id:'e2', type:'res',  a:'c3',   b:'c10', value:1000,     name:'R1'},
+    {id:'e3', type:'res',  a:'b10',  b:'b17', value:2200,     name:'R2'},
+    {id:'e4', type:'wire', a:'a17',  b:'tn17',color:'black',  name:'W2'},
+    {id:'e5', type:'wire', a:'psu1p',b:'tp1', color:'red',    name:'W3'},
+    {id:'e6', type:'wire', a:'psu1n',b:'tn1', color:'black',  name:'W4'},
+    {id:'e7', type:'wire', a:'psu1n',b:'psug',color:'green',  name:'W5'},
+    {id:'e8', type:'wire', a:'dmmv', b:'d10', color:'red',    name:'W6'},
+    {id:'e9', type:'wire', a:'dmmcom',b:'tn23',color:'black', name:'W7'},
+    {id:'e10',type:'wire', a:'sc1',  b:'e10', color:'yellow', name:'W8'},
+    {id:'e11',type:'wire', a:'sc1g', b:'tn27',color:'black',  name:'W9'}
+  ];
+  const validComp = c => c && HM[c.a] && HM[c.b] && c.a !== c.b &&
+    ((c.type === 'res' && c.value > 0) || (c.type === 'wire' && WC[c.color]));
+  function load(){
+    try {
+      const d = JSON.parse(localStorage.getItem(KEY));
+      if (d && Array.isArray(d.comps)){
+        comps = d.comps.filter(validComp);
+        if (d.inst && typeof d.inst === 'object') for (const k in DEF_INST) if (typeof d.inst[k] === typeof DEF_INST[k]) inst[k] = d.inst[k];
+        return true;
+      }
+    } catch(e){}
+    return false;
+  }
+  function persist(){ try { localStorage.setItem(KEY, JSON.stringify({comps, inst})); } catch(e){} }
+  function save(){ example = false; exNote.hidden = true; persist(); }
+  const getC = id => comps.find(c => c.id === id);
+  const uid = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  function nextName(type){
+    const pre = type === 'res' ? 'R' : 'W';
+    let n = 0; comps.forEach(c => { if (c.name && c.name[0] === pre){ const k = parseInt(c.name.slice(1)); if (k > n) n = k; } });
+    return pre + (n + 1);
+  }
+  function occ(except){ const m = {}; comps.forEach(c => { if (c.id === except) return; m[c.a] = c; m[c.b] = c; }); return m; }
+  const taken = (o, h) => !h.jack && o[h.id];
+  function buildNets(){
+    const p = {};
+    const find = x => { if (!(x in p)) p[x] = x; while (p[x] !== x){ p[x] = p[p[x]]; x = p[x]; } return x; };
+    comps.forEach(c => { if (c.type === 'wire'){ const a = find(HM[c.a].strip), b = find(HM[c.b].strip); if (a !== b) p[a] = b; } });
+    return find;
+  }
+  const isShort = (c, find) => c.type === 'res' && find(HM[c.a].strip) === find(HM[c.b].strip);
+  const used = hid => comps.some(c => c.a === hid || c.b === hid);
+
+  /* ---------- 요소 ---------- */
+  const $ = id => document.getElementById(id);
+  const svg = $('bb'), statusEl = $('status'), selBox = $('selBox'), list = $('list'), exNote = $('exNote');
+  const schemSvg = $('schem'), schemInfo = $('schemInfo'), schemEmpty = $('schemEmpty');
+
+  /* ---------- 계기 앞판 ---------- */
+  function benchSVG(){
+    let s = '';
+    const jackLab = (x, t, y = 270) => `<text class="inst-small" x="${x}" y="${y}" text-anchor="middle">${t}</text>`;
+    /* 전원공급기 */
+    s += `<rect class="inst" x="2" y="4" width="326" height="284" rx="8"/>`;
+    s += `<text class="inst-title" x="14" y="21">DC 전원공급기</text><text class="inst-model" x="316" y="21" text-anchor="end">DP30-05TP형</text>`;
+    [1,2].forEach(k => {
+      const bx = k === 1 ? 12 : 170;
+      s += `<rect class="inst-sub" x="${bx}" y="28" width="148" height="154" rx="6"/>`;
+      s += `<text class="inst-lab" x="${bx+8}" y="42" style="text-anchor:start">CH${k}</text><text class="inst-small" x="${bx+140}" y="42" text-anchor="end">0–30V · 0–5A</text>`;
+      s += `<rect class="disp" x="${bx+8}" y="48" width="132" height="31" rx="3"/><text id="psu${k}V" class="seg7 r" x="${bx+120}" y="73">0.00</text><text class="seg-u" x="${bx+125}" y="73">V</text>`;
+      s += `<rect class="disp" x="${bx+8}" y="83" width="132" height="29" rx="3"/><text id="psu${k}A" class="seg7 g" x="${bx+120}" y="106">0.000</text><text class="seg-u" x="${bx+125}" y="106">A</text>`;
+      s += `<circle id="psu${k}cv" class="led" cx="${bx+16}" cy="121" r="3.5"/><text class="inst-small" x="${bx+23}" y="124">C.V</text>`;
+      s += `<circle id="psu${k}cc" class="led" cx="${bx+56}" cy="121" r="3.5"/><text class="inst-small" x="${bx+63}" y="124">C.C</text>`;
+      [['v', bx+40, 'VOLTAGE'], ['i', bx+108, 'CURRENT']].forEach(([t, x, lab]) => {
+        s += `<g data-ctl="knob" data-k="${t}${k}" transform="translate(${x} 150)"><circle class="knob" r="14"/><circle class="knob-in" r="10"/><line id="k${t}${k}" class="knob-ind" x1="0" y1="-3" x2="0" y2="-11"/></g>`;
+        s += `<text class="inst-small" x="${x}" y="177" text-anchor="middle">${lab}</text>`;
+      });
+    });
+    s += `<text class="inst-small" x="14" y="204">모드 INDEP(독립) · CH3 5V 고정(3A)</text>`;
+    s += `<circle id="psuOutLed" class="led" cx="222" cy="201" r="4"/>`;
+    s += `<g data-ctl="out"><rect id="outBtnS" class="ibtn" x="232" y="190" width="84" height="22" rx="4"/><text class="ibtn-t" x="274" y="204">OUTPUT</text></g>`;
+    s += `<text class="inst-lab" x="46" y="226">CH1</text><text class="inst-lab" x="110" y="226">GND</text><text class="inst-lab" x="174" y="226">CH2</text><text class="inst-lab" x="266" y="226">CH3 5V</text>`;
+    s += jackLab(30,'−') + jackLab(62,'+') + jackLab(110,'⏚ 접지') + jackLab(158,'−') + jackLab(190,'+') + jackLab(250,'−') + jackLab(282,'+');
+    const btn = (ctl, data, x, y, w, h, label, id, fs) => `<g data-ctl="${ctl}"${Object.entries(data).map(([k,v]) => ` data-${k}="${v}"`).join('')}><rect${id ? ` id="${id}"` : ''} class="ibtn" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/><text class="ibtn-t" x="${x + w/2}" y="${y + h/2 + 3}"${fs ? ` style="font-size:${fs}px"` : ''}>${label}</text></g>`;
+    /* 오실로스코프 (위 선반 오른쪽, 큰 화면) */
+    s += `<rect class="inst" x="340" y="4" width="512" height="284" rx="8"/>`;
+    s += `<text class="inst-title" x="352" y="21">오실로스코프</text><text class="inst-model" x="840" y="21" text-anchor="end">DSOX1102A형</text>`;
+    s += `<rect class="scr" x="348" y="28" width="308" height="248" rx="3"/>`;
+    for (let i = 0; i <= 10; i++) s += `<line class="grid${i === 5 ? ' ax' : ''}" x1="${352 + i*30}" x2="${352 + i*30}" y1="32" y2="272"/>`;
+    for (let j = 0; j <= 8; j++) s += `<line class="grid${j === 4 ? ' ax' : ''}" x1="352" x2="652" y1="${32 + j*30}" y2="${32 + j*30}"/>`;
+    s += `<clipPath id="scrClip"><rect x="352" y="32" width="300" height="240"/></clipPath><g id="scTr" clip-path="url(#scrClip)"></g><g id="scMark"></g>`;
+    s += `<text id="sc1lab" class="sc-t c1" x="356" y="44"></text><text id="sc2lab" class="sc-t c2" x="456" y="44"></text><text id="scTime" class="sc-t cw" x="648" y="44" text-anchor="end"></text>`;
+    s += `<text id="scMeas1" class="sc-t c1" x="356" y="254"></text><text id="scMeas2" class="sc-t c2" x="356" y="267"></text>`;
+    s += btn('auto', {}, 668, 30, 96, 20, 'Auto Scale', '', 8.5);
+    s += `<text class="inst-lab" x="668" y="72" style="text-anchor:start">시간/div</text>`;
+    s += btn('time', {d:1}, 724, 58, 20, 20, '◀') + btn('time', {d:-1}, 748, 58, 20, 20, '▶');
+    [1,2].forEach(k => {
+      const y = k === 1 ? 86 : 112;
+      s += btn('ch', {ch:k}, 668, y, 24, 20, k, `scb${k}`);
+      s += btn('vdiv', {ch:k, d:1}, 696, y, 18, 20, '▲') + btn('vdiv', {ch:k, d:-1}, 718, y, 18, 20, '▼');
+      s += btn('cp', {ch:k}, 740, y, 30, 20, 'DC', '', 8);
+      s += `<text id="cpT${k}" class="inst-small" x="776" y="${y + 14}"></text>`;
+    });
+    s += `<text class="inst-small" x="668" y="146">▲▼ V/div · DC/AC 입력 결합</text>`;
+    s += `<text class="inst-small" x="668" y="158">◀ 느리게 · ▶ 빠르게 (시간축)</text>`;
+    s += `<text class="inst-small" x="836" y="158" text-anchor="end">×10 프로브</text>`;
+    [[700, 'CH1', 684, 716], [800, 'CH2', 784, 816]].forEach(([bx, lab, t, g]) => {
+      s += `<text class="inst-lab" x="${bx}" y="182">${lab}</text><circle class="bnc" cx="${bx}" cy="198" r="9"/><circle class="jack-hole" cx="${bx}" cy="198" r="3.5"/>`;
+      s += `<path class="cable" d="M${bx} 207 L${bx} 220 L${t} 236 M${bx} 220 L${g} 236"/>`;
+      s += jackLab(t, '프로브') + jackLab(g, '접지클립');
+    });
+    /* 함수 발생기 (아래 선반 왼쪽) */
+    const Y = R2;
+    s += `<rect class="inst" x="2" y="${Y+4}" width="326" height="208" rx="8"/>`;
+    s += `<text class="inst-title" x="14" y="${Y+21}">함수 발생기</text><text class="inst-model" x="316" y="${Y+21}" text-anchor="end">AFG-2005형</text>`;
+    s += `<rect class="lcd" x="14" y="${Y+28}" width="302" height="62" rx="4"/>`;
+    s += `<text id="genWave" class="lcd-m" x="22" y="${Y+45}"></text><text id="genLoad" class="lcd-s" x="308" y="${Y+44}" text-anchor="end"></text>`;
+    s += `<text id="genf" class="lcd-m" x="22" y="${Y+64}"></text>`;
+    s += `<text id="gena" class="lcd-m" x="22" y="${Y+82}"></text><text id="geno" class="lcd-m" x="170" y="${Y+82}"></text>`;
+    [['sine','∿ Sine'],['square','⊓ Squ'],['tri','⋀ Tri']].forEach(([w, l], i) => s += btn('wave', {w}, 14 + i*50, Y+98, 46, 20, l, `gw_${w}`));
+    [['f','FREQ'],['a','AMPL'],['o','OFST']].forEach(([p, l], i) => s += btn('gpar', {p}, 170 + i*50, Y+98, 46, 20, l, `gp_${p}`));
+    s += `<g data-ctl="knob" data-k="gen" transform="translate(42 ${Y+150})"><circle class="knob" r="16"/><circle class="knob-in" r="11"/><line id="kgen" class="knob-ind" x1="0" y1="-3" x2="0" y2="-12"/></g>`;
+    s += `<text class="inst-small" x="42" y="${Y+180}" text-anchor="middle">가변 손잡이</text>`;
+    s += `<text class="inst-lab" x="112" y="${Y+132}">MAIN 50Ω</text><circle class="bnc" cx="112" cy="${Y+146}" r="9"/><circle class="jack-hole" cx="112" cy="${Y+146}" r="3.5"/>`;
+    s += `<path class="cable" d="M112 ${Y+155} L112 ${Y+164} L96 ${Y+172} M112 ${Y+164} L128 ${Y+172}"/>`;
+    s += jackLab(96, '신호', Y+202) + jackLab(128, '접지', Y+202);
+    s += `<circle id="goutLed" class="led" cx="224" cy="${Y+139}" r="4"/>` + btn('gout', {}, 234, Y+128, 82, 22, 'OUTPUT', 'goutBtn');
+    s += `<text class="inst-small" x="170" y="${Y+172}">5MHz DDS · 출력 임피던스 50Ω</text>`;
+    s += `<text class="inst-small" x="170" y="${Y+184}">FREQ/AMPL/OFST 고르고 손잡이로 조절</text>`;
+    /* 멀티미터 (아래 선반 가운데) */
+    s += `<rect class="inst" x="340" y="${Y+4}" width="246" height="208" rx="8"/>`;
+    s += `<text class="inst-title" x="352" y="${Y+21}">디지털 멀티미터</text><text class="inst-model" x="574" y="${Y+21}" text-anchor="end">GDM-8342형</text>`;
+    s += `<rect class="lcd" x="352" y="${Y+28}" width="222" height="62" rx="4"/>`;
+    s += `<text id="dmmFn" class="lcd-s" x="360" y="${Y+42}">DCV AUTO</text><text id="dmmSub" class="lcd-s" x="566" y="${Y+42}" text-anchor="end"></text>`;
+    s += `<text id="dmmMain" class="lcd-big" x="528" y="${Y+81}">0.0000</text><text id="dmmUnit" class="lcd-u" x="533" y="${Y+81}">V</text>`;
+    [['dcv','DCV'],['acv','ACV'],['dci','DCI'],['ohm','Ω'],['cont','통전']].forEach(([f, lab], i) => s += btn('fn', {fn:f}, 352 + i*45, Y+98, 40, 22, lab, `fn_${f}`));
+    s += `<text class="inst-small" x="352" y="${Y+136}">50,000 카운트 · 자동 범위 · 입력 10MΩ · ACV는 실효값</text>`;
+    s += `<text id="dmmFuse" class="inst-warn" x="488" y="${Y+152}" text-anchor="middle" visibility="hidden">퓨즈 끊어짐</text>`;
+    s += `<text class="inst-lab" x="378" y="${Y+166}">VΩ</text><text class="inst-lab" x="433" y="${Y+166}">COM</text><text class="inst-lab" x="488" y="${Y+166}">mA</text><text class="inst-lab" x="543" y="${Y+166}">10A</text>`;
+    s += jackLab(378,'V·Ω',Y+202) + jackLab(433,'공통',Y+202) + jackLab(488,'≤0.5A',Y+202) + jackLab(543,'≤10A',Y+202);
+    /* 잭 */
+    holes.filter(h => h.jack).forEach(h => s += `<circle class="jack" cx="${h.x}" cy="${h.y}" r="8" style="fill:${WC[h.jcolor].hex}"/><circle class="jack-hole" cx="${h.x}" cy="${h.y}" r="3"/>`);
+    return s;
+  }
+
+  /* ---------- 정적 그리기 ---------- */
+  (function drawStatic(){
+    svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+    let s = benchSVG();
+    BOARDS.forEach(B => {
+      const o = B.ox;
+      s += `<rect class="b-body" x="${o+6}" y="${BY+4}" width="${BW-12}" height="${BH-8}" rx="10"/>`;
+      s += `<rect class="b-channel" x="${o+200}" y="${BY+14}" width="20" height="${BH-28}" rx="3"/>`;
+      s += `<text class="boardlab" x="${o+210}" y="${BY+BH/2}">${B.lab}</text>`;
+      [[20,'red'],[64,'blue'],[356,'red'],[400,'blue']].forEach(([x,c]) =>
+        s += `<line class="rail-${c}" y1="${rowY(1)-10}" y2="${rowY(N)+10}" x1="${o+x}" x2="${o+x}"/>`);
+      RAILS.forEach(rl => {
+        const cls = rl.s === '+' ? 'sign-red' : 'sign-blue';
+        s += `<text class="sign ${cls}" x="${o+rl.x}" y="${BY+30}">${rl.s}</text><text class="sign ${cls}" x="${o+rl.x}" y="${BY+BH-14}">${rl.s}</text>`;
+      });
+      for (let c = 1; c <= N; c++){
+        if (c === 1 || c % 5 === 0)
+          s += `<text class="colnum" x="${o+82}" y="${rowY(c)+3}">${c}</text><text class="colnum" x="${o+338}" y="${rowY(c)+3}">${c}</text>`;
+      }
+      RT.forEach((r,i) => s += `<text class="rowlet" x="${o+XT[i]}" y="${BY+30}">${r}</text><text class="rowlet" x="${o+XT[i]}" y="${BY+BH-18}">${r}</text>`);
+      RB.forEach((r,i) => s += `<text class="rowlet" x="${o+XB[i]}" y="${BY+30}">${r}</text><text class="rowlet" x="${o+XB[i]}" y="${BY+BH-18}">${r}</text>`);
+    });
+    s += '<g id="strips">' + Object.values(strips).filter(st => st.w).map(st =>
+      `<rect class="strip" data-strip="${st.id}" x="${st.x}" y="${st.y}" width="${st.w}" height="${st.h}" rx="4"/>`).join('') + '</g>';
+    s += '<g>' + holes.filter(h => !h.jack).map(h => `<rect class="hole" x="${h.x-3.5}" y="${h.y-3.5}" width="7" height="7" rx="1.5"/>`).join('') + '</g>';
+    s += '<g id="comps"></g><rect id="hoverRing" class="hover-ring" width="13" height="13" rx="3" x="-50" y="-50"/><g id="overlay"></g>';
+    svg.innerHTML = s;
+  })();
+  const compsG = $('comps'), overlayG = $('overlay'), ring = $('hoverRing');
+  const stripEls = {};
+  svg.querySelectorAll('.strip').forEach(el => stripEls[el.dataset.strip] = el);
+
+  /* ---------- 부품 SVG ---------- */
+  function compSVG(c, ha, hb, opt){
+    const cls = ['comp', c.type, opt.sel ? 'sel' : '', opt.bad ? 'bad' : '', opt.ghost ? 'ghost' : ''].join(' ');
+    const dx = hb.x - ha.x, dy = hb.y - ha.y, len = Math.hypot(dx, dy) || 1;
+    let nx = -dy / len, ny = dx / len;
+    if (ny > 0 || (ny === 0 && nx < 0)){ nx = -nx; ny = -ny; }
+    const mx = (ha.x + hb.x) / 2, my = (ha.y + hb.y) / 2;
+    let s = `<g class="${cls}" data-cid="${c.id}">`;
+    if (c.type === 'wire'){
+      const k = Math.min(len * 0.12, 14);
+      const d = `M${ha.x} ${ha.y}Q${mx + nx*k} ${my + ny*k} ${hb.x} ${hb.y}`;
+      const col = (WC[c.color] || WC.red).hex;
+      if (opt.sel) s += `<path class="halo" d="${d}"/>`;
+      s += `<path class="w-out" d="${d}"/><path class="w-core" d="${d}" style="stroke:${col}"/>`;
+      s += `<circle class="tip" cx="${ha.x}" cy="${ha.y}" r="2.4"/><circle class="tip" cx="${hb.x}" cy="${hb.y}" r="2.4"/>`;
+      s += `<path class="hit" d="${d}"/>`;
+    } else {
+      const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      const bl = Math.min(30, Math.max(13, len - 12)), bx = (len - bl) / 2;
+      const b = bands(c.value);
+      let bs = '';
+      if (b){ const pos = [0.2, 0.36, 0.52, 0.8]; b.list.forEach((x,i) => bs += `<rect x="${(bx + bl*pos[i] - 1.3).toFixed(2)}" y="-5" width="2.6" height="10" style="fill:${x[1]}"/>`); }
+      if (opt.sel) s += `<line class="halo" x1="${ha.x}" y1="${ha.y}" x2="${hb.x}" y2="${hb.y}"/>`;
+      s += `<g transform="translate(${ha.x} ${ha.y}) rotate(${ang.toFixed(2)})">`;
+      s += `<line class="lead" x1="0" y1="0" x2="${len}" y2="0"/><rect class="r-body" x="${bx}" y="-5.5" width="${bl}" height="11" rx="5"/>${bs}`;
+      s += `<circle class="tip" cx="0" cy="0" r="2.4"/><circle class="tip" cx="${len}" cy="0" r="2.4"/></g>`;
+      s += `<line class="hit" x1="${ha.x}" y1="${ha.y}" x2="${hb.x}" y2="${hb.y}"/>`;
+      if (!opt.ghost){
+        const lx = mx + nx * 13, ly = my + ny * 13 + 3;
+        const anchor = Math.abs(nx) > 0.7 ? (nx > 0 ? 'start' : 'end') : 'middle';
+        s += `<text class="r-label${opt.warn ? ' warn' : ''}" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${opt.warn ? '⚠ ' : ''}${c.name} ${fmt(c.value)}</text>`;
+      }
+    }
+    return s + '</g>';
+  }
+  const handleSVG = (h, end, id) => `<circle class="handle" data-end="${end}" data-cid="${id}" cx="${h.x}" cy="${h.y}" r="6"/>`;
+  const leadColor = (h1, h2) => h1.jack ? h1.jcolor : (h2 && h2.jack) ? h2.jcolor : wireColor;
+
+  /* ---------- 보드 렌더 ---------- */
+  function render(){
+    const find = buildNets();
+    let s = '';
+    const order = comps.slice().sort((x,y) => (x.id === selId) - (y.id === selId));
+    order.forEach(c => {
+      let ha = HM[c.a], hb = HM[c.b], bad = false;
+      if (drag && drag.id === c.id){ ha = drag.a; hb = drag.b; bad = !drag.valid; }
+      s += compSVG(c, ha, hb, {sel: c.id === selId, bad, warn: isShort(c, find)});
+    });
+    compsG.innerHTML = s;
+    let o = '';
+    const sc = getC(selId);
+    if (sc && mode === 'select'){
+      let ha = HM[sc.a], hb = HM[sc.b];
+      if (drag && drag.id === sc.id){ ha = drag.a; hb = drag.b; }
+      o += handleSVG(ha, 'a', sc.id) + handleSVG(hb, 'b', sc.id);
+    }
+    if (pending){
+      o += `<circle class="pend" cx="${pending.x}" cy="${pending.y}" r="${pending.jack ? 11 : 7.5}"/>`;
+      if (hover && hover !== pending){
+        const g = {id:'_ghost', type: mode, value: newVal, color: leadColor(pending, hover), name: ''};
+        o += compSVG(g, pending, hover, {ghost: true, bad: !!taken(occ(), hover)});
+      }
+    }
+    overlayG.innerHTML = o;
+    updateHighlights();
+    updateStatus();
+  }
+
+  function updateHighlights(){
+    for (const id in stripEls) stripEls[id].classList.remove('hl','hl2');
+    const find = buildNets();
+    let focus = [];
+    if (drag) focus = [drag.a.strip, drag.b.strip];
+    else if (pending && hover) focus = [pending.strip, hover.strip];
+    else if (pending) focus = [pending.strip];
+    else if (hover) focus = [hover.strip];
+    else if (schemFocus){ for (const id in stripEls) if (find(id) === schemFocus) stripEls[id].classList.add('hl'); return; }
+    else { const c = getC(selId); if (c) focus = [HM[c.a].strip, HM[c.b].strip]; }
+    if (!focus.length) return;
+    const roots = new Set(focus.map(find));
+    for (const id in stripEls){
+      if (focus.includes(id)) stripEls[id].classList.add('hl');
+      else if (roots.has(find(id))) stripEls[id].classList.add('hl2');
+    }
+  }
+
+  function updateStatus(){
+    let t = '';
+    if (knobDrag){
+      const k = knobDrag.k;
+      if (k === 'gen') t = `신호발생기 ${{f:'주파수', a:'진폭', o:'오프셋'}[inst.gsel]}: <code>${inst.gsel === 'f' ? fmtHz(inst.gf) : inst.gsel === 'a' ? inst.ga.toFixed(3) + ' Vpp' : inst.go.toFixed(2) + ' V'}</code>`;
+      else t = `CH${k[1]} ${k[0] === 'v' ? '전압 설정' : '전류 제한'}: <code>${k[0] === 'v' ? inst[k].toFixed(2) + ' V' : inst[k].toFixed(3) + ' A'}</code>`;
+    } else if (drag){
+      t = drag.valid ? `놓을 위치: <code>${drag.a.label}</code> ↔ <code>${drag.b.label}</code>` : '여기에는 놓을 수 없어요. (다른 부품이 꽂혀 있거나 구멍이 아님)';
+    } else if (pending){
+      t = `시작 <code>${pending.label}</code> 선택됨 → 끝 구멍이나 단자를 클릭하세요. <b>Esc</b>로 취소`;
+      if (hover && hover !== pending) t += ` · 끝: <code>${hover.label}</code>`;
+    } else if (hover){
+      if (hover.jack){
+        t = `<b>단자 <code>${hover.label}</code></b> · ${strips[hover.strip].desc}`;
+      } else {
+        t = `<b>구멍 <code>${hover.label}</code></b> · 내부 연결: ${strips[hover.strip].desc}`;
+        const o = occ()[hover.id];
+        if (o) t += ` · <b>${o.name}</b> 다리 꽂힘`;
+      }
+      const find = buildNets(), r = find(hover.strip);
+      const n = Object.keys(strips).filter(id => id !== hover.strip && find(id) === r).length;
+      if (n) t += ` · 선으로 다른 줄·단자 ${n}개와 연결됨`;
+      if (sol && sol.ok){ const v = sol.vNet(r); if (v != null && (inst.out || inst.gout)) t += ` · 접지 기준${inst.gout ? '(평균)' : ''} <code>${fmtV(v)}</code>`; }
+    } else {
+      t = mode === 'select' ? '부품을 끌어 옮기고, 계기 손잡이·버튼을 눌러 조작하세요.'
+        : mode === 'res' ? `저항(${fmt(newVal)}): 첫 번째 다리를 꽂을 구멍을 클릭하세요.`
+        : `점퍼선·리드선: 시작 구멍이나 계기 단자를 클릭하세요.`;
+    }
+    statusEl.innerHTML = t;
+  }
+
+  /* ---------- 직류 회로 계산 (MNA) ---------- */
+  const PSU = [{k:1, p:'psu1p', m:'psu1n'}, {k:2, p:'psu2p', m:'psu2n'}, {k:3, p:'psu3p', m:'psu3n'}];
+  const VDIVS = [0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10];
+  function gauss(A, b){
+    const n = b.length;
+    for (let c = 0; c < n; c++){
+      let p = c, mx = Math.abs(A[c][c]);
+      for (let r = c + 1; r < n; r++){ const v = Math.abs(A[r][c]); if (v > mx){ mx = v; p = r; } }
+      if (mx < 1e-13) return null;
+      if (p !== c){ const t = A[p]; A[p] = A[c]; A[c] = t; const u = b[p]; b[p] = b[c]; b[c] = u; }
+      for (let r = c + 1; r < n; r++){
+        const f = A[r][c] / A[c][c]; if (f === 0) continue;
+        for (let k = c; k < n; k++) A[r][k] -= f * A[c][k];
+        b[r] -= f * b[c];
+      }
+    }
+    const x = new Array(n).fill(0);
+    for (let r = n - 1; r >= 0; r--){ let s = b[r]; for (let k = r + 1; k < n; k++) s -= A[r][k] * x[k]; x[r] = s / A[r][r]; }
+    return x;
+  }
+  const NS = 128;
+  const TDIVS = [1e-6,2e-6,5e-6,1e-5,2e-5,5e-5,1e-4,2e-4,5e-4,1e-3,2e-3,5e-3,1e-2,2e-2,5e-2,0.1];
+  const GKEY = {f:'gf', a:'ga', o:'go'};
+  const GLIM = () => inst.gload === '50' ? 5 : 10;
+  function genWave(ph){
+    if (inst.gwave === 'square') return ph < 0.5 ? 1 : -1;
+    if (inst.gwave === 'tri') return ph < 0.25 ? 4 * ph : ph < 0.75 ? 2 - 4 * ph : 4 * ph - 4;
+    return Math.sin(2 * Math.PI * ph);
+  }
+  const genK = () => inst.gload === '50' ? 2 : 1;   // 50Ω 기준 표시값이면 내부 기전력은 2배
+  const genEMF = ph => genK() * (inst.go + inst.ga / 2 * genWave(ph));
+  const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+  const rmsAC = a => { const m = mean(a); return Math.sqrt(mean(a.map(v => (v - m) ** 2))); };
+
+  function solveOnce(eGen){
+    const find = buildNets(), earth = find('EARTH');
+    const idx = new Map(); let n = 0;
+    const nd = hid => { const r = find(HM[hid].strip); if (r === earth) return -1; if (!idx.has(r)) idx.set(r, n++); return idx.get(r); };
+    const els = [];
+    comps.forEach(c => { if (c.type === 'res') els.push([nd(c.a), nd(c.b), 1 / c.value]); });
+    const ohm = inst.dmm === 'ohm' || inst.dmm === 'cont';
+    const nV = nd('dmmv'), nC = nd('dmmcom'), nMA = nd('dmmma'), nA10 = nd('dmma10');
+    if (!ohm) els.push([nV, nC, 1e-7]);
+    if (!inst.fuse) els.push([nMA, nC, 1]);
+    els.push([nA10, nC, 100]);
+    const nT1 = nd('sc1'), nT2 = nd('sc2');
+    const scEls = [[nT1, -1, 1e-7], [nT2, -1, 1e-7]];
+    const ch = PSU.map(Pp => ({k:Pp.k, v: Pp.k === 3 ? 5 : inst['v' + Pp.k], i: Pp.k === 3 ? 3 : inst['i' + Pp.k],
+      np: nd(Pp.p), nm: nd(Pp.m), same: find(HM[Pp.p].strip) === find(HM[Pp.m].strip), mode:'CV', vout:0, iout:0}));
+    const nGp = nd('genp');
+    let gi = -1;
+    if (eGen != null){ gi = n++; els.push([gi, nGp, 1 / 50]); }
+    const all = els.concat(scEls);
+    let x = null, err = null;
+    const act = inst.out ? ch.filter(c => !c.same) : [];
+    for (let it = 0; it < 10; it++){
+      const srcs = act.filter(c => c.mode === 'CV').map(c => ({c, np:c.np, nm:c.nm, v:c.v}));
+      if (gi >= 0) srcs.push({np:gi, nm:-1, v:eGen});
+      const M = n + srcs.length;
+      const A = Array.from({length:M}, () => new Array(M).fill(0)), z = new Array(M).fill(0);
+      all.forEach(([a, b, g]) => {
+        if (a >= 0) A[a][a] += g; if (b >= 0) A[b][b] += g;
+        if (a >= 0 && b >= 0){ A[a][b] -= g; A[b][a] -= g; }
+      });
+      for (let i = 0; i < n; i++) A[i][i] += 1e-10;
+      const inj = (node, I) => { if (node >= 0) z[node] += I; };
+      if (ohm){ inj(nV, 1e-3); inj(nC, -1e-3); }
+      act.filter(c => c.mode === 'CC').forEach(c => { inj(c.np, c.i); inj(c.nm, -c.i); });
+      srcs.forEach((s, j) => {
+        const r = n + j; if (s.c) s.c.row = r;
+        if (s.np >= 0){ A[s.np][r] += 1; A[r][s.np] += 1; }
+        if (s.nm >= 0){ A[s.nm][r] -= 1; A[r][s.nm] -= 1; }
+        z[r] = s.v;
+      });
+      x = gauss(A, z);
+      if (!x || x.some(v => !isFinite(v) || Math.abs(v) > 1e7)){ x = null; err = '전원 출력끼리 직접 연결돼 있어 계산할 수 없어요. 전원 단자 연결을 확인하세요.'; break; }
+      const V = i => i < 0 ? 0 : x[i];
+      let changed = false;
+      act.forEach(c => {
+        if (c.mode === 'CV'){ c.iout = -x[c.row]; c.vout = c.v; if (c.iout > c.i * 1.0001 + 1e-9){ c.mode = 'CC'; changed = true; } }
+        else { c.vout = V(c.np) - V(c.nm); c.iout = c.i; if (c.vout > c.v + 1e-9){ c.mode = 'CV'; changed = true; } }
+      });
+      if (!changed) break;
+    }
+    if (inst.out) ch.filter(c => c.same).forEach(c => { c.mode = 'CC'; c.vout = 0; c.iout = c.i; });
+    const V = i => (x && i >= 0) ? x[i] : 0;
+    const imA = inst.fuse ? 0 : V(nMA) - V(nC), i10 = (V(nA10) - V(nC)) * 100;
+
+    // 접지 경로 확인
+    const u = {}; const uf = a => { if (!(a in u)) u[a] = a; while (u[a] !== a){ u[a] = u[u[a]]; a = u[a]; } return a; };
+    const un = (a, b) => { a = uf(a); b = uf(b); if (a !== b) u[a] = b; };
+    els.forEach(([a, b]) => un(a, b));
+    act.forEach(c => un(c.np, c.nm));
+    const genFloat = uf(nGp) !== uf(-1);
+    if (gi >= 0) un(gi, -1);
+    const floating = [nT1, nT2].map(t => uf(t) !== uf(-1));
+    return {ok: !err, err, ch, earth, imA, i10, floating, genFloat, genShort: nGp === -1,
+      vdm: V(nV) - V(nC), idm: imA + i10, t1: V(nT1), t2: V(nT2),
+      vNet: root => { if (root === earth) return 0; return (x && idx.has(root)) ? x[idx.get(root)] : null; }};
+  }
+  function solve(){
+    const run = () => {
+      const base = solveOnce(inst.gout ? genK() * inst.go : null);
+      let tab = null;
+      if (inst.gout && base.ok){
+        tab = [];
+        for (let i = 0; i < NS; i++){ const r = solveOnce(genEMF(i / NS)); if (!r.ok){ tab = null; break; } tab.push(r); }
+      }
+      return {base, tab};
+    };
+    let R = run();
+    const imArms = R.tab ? Math.sqrt(mean(R.tab.map(r => r.imA * r.imA))) : Math.abs(R.base.imA);
+    if (!inst.fuse && R.base.ok && imArms > 0.5){
+      inst.fuse = true; persist();
+      toast('⚠ 멀티미터 mA 단자에 0.5A가 넘게 흘러 퓨즈가 끊어졌어요.');
+      R = run();
+    }
+    const b = R.base, T = R.tab;
+    const series = key => T ? T.map(r => r[key]) : [b[key]];
+    sol = Object.assign({}, b, {tab: !!T, vdmS: series('vdm'), idmS: series('idm'), t1S: series('t1'), t2S: series('t2')});
+  }
+
+  function dmmFmt(v, u){
+    const a = Math.abs(v);
+    const P = u === 'Ω' ? [[1e6,'M'],[1e3,'k'],[1,'']] : u === 'A' ? [[1,''],[1e-3,'m'],[1e-6,'µ']] : [[1,''],[1e-3,'m']];
+    let p = P[P.length - 1];
+    if (a === 0) p = [1,''];
+    else for (const q of P){ if (a >= q[0] * 0.5){ p = q; break; } }
+    const s = v / p[0], as = Math.abs(s);
+    const intD = as >= 1 ? Math.floor(Math.log10(as)) + 1 : 1;
+    return [s.toFixed(Math.max(0, Math.min(4, 5 - intD))), p[1] + u];
+  }
+  function dmmReading(){
+    if (!sol || !sol.ok) return ['-----', '', ''];
+    if (inst.dmm === 'dcv'){ const [m,u] = dmmFmt(mean(sol.vdmS), 'V'); return [m, u, '']; }
+    if (inst.dmm === 'acv'){ const [m,u] = dmmFmt(rmsAC(sol.vdmS), 'V'); return [m, u, 'RMS']; }
+    if (inst.dmm === 'dci'){ const [m,u] = dmmFmt(mean(sol.idmS), 'A'); return [m, u, '']; }
+    const r = sol.vdm / 1e-3;
+    if (!(r >= 0) || r > 50e6) return ['OL', 'Ω', ''];
+    const [m,u] = dmmFmt(r, 'Ω');
+    return [m, u, inst.dmm === 'cont' && r < 10 ? '♪ 삑' : ''];
+  }
+  const fmtVdiv = vd => vd < 1 ? `${+(vd * 1000).toFixed(0)}mV/` : `${vd}V/`;
+  const fmtSc = v => Math.abs(v) < 1 ? `${(v * 1000).toFixed(1)}mV` : `${v.toPrecision(3)}V`;
+  const fmtT = t => t < 1e-3 ? `${+(t * 1e6).toPrecision(3)}µs/` : t < 1 ? `${+(t * 1e3).toPrecision(3)}ms/` : `${t}s/`;
+  const fmtHz = f => f >= 1e6 ? `${(f / 1e6).toFixed(4)} MHz` : f >= 1e3 ? `${(f / 1e3).toFixed(4)} kHz` : `${f.toFixed(2)} Hz`;
+  const fmtHzS = f => f >= 1e6 ? `${+(f / 1e6).toPrecision(4)}MHz` : f >= 1e3 ? `${+(f / 1e3).toPrecision(4)}kHz` : `${+f.toPrecision(4)}Hz`;
+  const WNAME = {sine:'사인파', square:'구형파', tri:'삼각파'};
+  function scStats(k){
+    const a = sol[k === 1 ? 't1S' : 't2S'];
+    const mx = Math.max(...a), mn = Math.min(...a);
+    return {a, m: mean(a), pp: mx - mn, mx, mn, rms: rmsAC(a)};
+  }
+
+  function setText(id, t){ const el = $(id); if (el) el.textContent = t; }
+  function setCls(id, cls, on){ const el = $(id); if (el) el.classList.toggle(cls, on); }
+
+  function updateInstUI(){
+    const S = sol, live = inst.out && S && S.ok;
+    [1,2].forEach(k => {
+      const c = S && S.ch[k-1];
+      const vt = live ? c.vout : inst['v' + k], it = live ? c.iout : inst['i' + k];
+      setText(`psu${k}V`, (inst.out && S && !S.ok) ? '--.--' : Math.max(0, vt).toFixed(2));
+      setText(`psu${k}A`, (inst.out && S && !S.ok) ? '-.---' : Math.max(0, it).toFixed(3));
+      setCls(`psu${k}A`, 'dim', !inst.out);
+      setCls(`psu${k}cv`, 'on-g', !!(live && c.mode === 'CV'));
+      setCls(`psu${k}cc`, 'on-r', !!(inst.out && c && c.mode === 'CC'));
+      $(`kv${k}`).setAttribute('transform', `rotate(${(-135 + 270 * inst['v' + k] / 30).toFixed(1)})`);
+      $(`ki${k}`).setAttribute('transform', `rotate(${(-135 + 270 * inst['i' + k] / 5).toFixed(1)})`);
+    });
+    setCls('psuOutLed', 'on-g', inst.out);
+    setCls('outBtnS', 'on', inst.out);
+
+    /* 함수 발생기 */
+    setText('genWave', {sine:'∿ SINE', square:'⊓ SQUARE', tri:'⋀ TRIANGLE'}[inst.gwave]);
+    setText('genLoad', inst.gload === '50' ? '50Ω 기준' : 'High-Z 기준');
+    setText('genf', `FREQ ${fmtHz(inst.gf)}`);
+    setText('gena', `AMPL ${inst.ga.toFixed(3)} Vpp`);
+    setText('geno', `OFST ${inst.go >= 0 ? '+' : ''}${inst.go.toFixed(2)} V`);
+    ['f','a','o'].forEach(p => { setCls('gen' + p, 'lcd-sel', inst.gsel === p); setCls('gp_' + p, 'on', inst.gsel === p); });
+    ['sine','square','tri'].forEach(w => setCls('gw_' + w, 'on', inst.gwave === w));
+    setCls('goutLed', 'on-g', inst.gout); setCls('goutBtn', 'on', inst.gout);
+    const L = GLIM();
+    const gfrac = inst.gsel === 'f' ? (Math.log10(inst.gf) + 1) / (Math.log10(5e6) + 1) : inst.gsel === 'a' ? inst.ga / (2 * L) : (inst.go + L) / (2 * L);
+    $('kgen').setAttribute('transform', `rotate(${(-135 + 270 * gfrac).toFixed(1)})`);
+
+    /* 멀티미터 */
+    const [m, u, sub] = dmmReading();
+    setText('dmmMain', m); setText('dmmUnit', u); setText('dmmSub', sub);
+    setText('dmmFn', {dcv:'DCV', acv:'ACV', dci:'DCI', ohm:'Ω 2W', cont:'통전'}[inst.dmm] + '  AUTO');
+    ['dcv','acv','dci','ohm','cont'].forEach(f => setCls('fn_' + f, 'on', inst.dmm === f));
+    $('dmmFuse').setAttribute('visibility', inst.fuse ? 'visible' : 'hidden');
+
+    /* 오실로스코프 */
+    let tr = '', mk = '';
+    const td = inst.td, cyc = (S && S.tab) ? inst.gf * 10 * td : 0;
+    setText('scTime', fmtT(td));
+    const stats = {};
+    [1,2].forEach(k => {
+      const on = inst['on' + k], vd = inst['vd' + k], cp = inst['cp' + k];
+      setCls(`scb${k}`, `ch${k}on`, on);
+      setText(`cpT${k}`, `CH${k} ${cp}`);
+      setText(`sc${k}lab`, on ? `${k}  ${fmtVdiv(vd)}  ${cp}` : '');
+      if (!on || !S || !S.ok){ setText(`scMeas${k}`, ''); return; }
+      const st = stats[k] = scStats(k);
+      const off = cp === 'AC' ? st.m : 0, pos = k === 1 ? 1 : -2;
+      const Yv = v => 152 - (pos + (v - off) / vd) * 30;
+      setText(`scMeas${k}`, `${k}: Vpp ${fmtSc(st.pp)}  평균 ${fmtSc(st.m)}` + (S.tab && st.pp > 2e-3 ? `  주파수 ${fmtHzS(inst.gf)}` : ''));
+      const yg = Math.max(36, Math.min(268, 152 - pos * 30));
+      mk += `<path class="c${k}" d="M348 ${yg - 5} L355 ${yg} L348 ${yg + 5}Z"/>`;
+      if (st.a.length === 1 || st.pp < 1e-9){
+        const y = Yv(st.m); let pts = '';
+        for (let x = 352; x <= 652; x += 4) pts += `${x},${(y + (Math.random() - 0.5) * 0.9).toFixed(1)} `;
+        tr += `<polyline class="tr k${k}" points="${pts}"/>`;
+      } else if (cyc > 30){
+        const y1 = Yv(st.mx), y2 = Yv(st.mn);
+        tr += `<rect class="band k${k}" x="352" y="${y1}" width="300" height="${Math.max(1, y2 - y1)}"/>`;
+      } else {
+        let pts = '';
+        for (let j = 0; j <= 300; j += 1.5){
+          const ph = (inst.gf * (j / 300) * 10 * td) % 1;
+          pts += `${(352 + j).toFixed(1)},${Yv(st.a[Math.floor(ph * NS) % NS]).toFixed(1)} `;
+        }
+        tr += `<polyline class="tr k${k}" points="${pts}"/>`;
+      }
+    });
+    $('scTr').innerHTML = tr; $('scMark').innerHTML = mk;
+
+    /* 패널 */
+    const rows = [];
+    [1,2,3].forEach(k => {
+      const c = S && S.ch[k-1];
+      if (live) rows.push([`전원 CH${k}`, `${c.vout.toFixed(2)} V · ${fmtI(c.iout)} · ${c.mode === 'CC' ? 'C.C' : 'C.V'}`, c.mode === 'CC']);
+      else rows.push([`전원 CH${k}`, `설정 ${k === 3 ? '5.00' : inst['v' + k].toFixed(2)} V / 제한 ${k === 3 ? '3.000' : inst['i' + k].toFixed(3)} A`, false]);
+    });
+    rows.push(['신호발생기', `${WNAME[inst.gwave]} ${fmtHzS(inst.gf)} · ${inst.ga.toFixed(3)} Vpp${inst.go ? ` · 오프셋 ${inst.go.toFixed(2)} V` : ''} · ${inst.gout ? '출력 ON' : '출력 OFF'}`, false]);
+    rows.push(['멀티미터', `${m} ${u} ${sub}`.trim(), false]);
+    [1,2].forEach(k => {
+      const st = stats[k];
+      rows.push([`스코프 CH${k}`, !inst['on' + k] ? '꺼짐' : st ? `Vpp ${fmtSc(st.pp)} · 평균 ${fmtSc(st.m)} · 실효(AC) ${fmtSc(st.rms)}` : '--', false]);
+    });
+    $('readouts').innerHTML = rows.map(([a, b, cc]) => `<dt>${a}</dt><dd${cc ? ' class="cc"' : ''}>${b}</dd>`).join('');
+    $('outState').textContent = `전원 ${inst.out ? 'ON' : 'OFF'} · 신호 ${inst.gout ? 'ON' : 'OFF'}`;
+    const ob = $('outBtn'); ob.textContent = inst.out ? '전원 출력 끄기' : '전원 출력 켜기'; ob.classList.toggle('on', inst.out);
+    const gb = $('genOutBtn'); gb.textContent = inst.gout ? '신호 출력 끄기' : '신호 출력 켜기'; gb.classList.toggle('on', inst.gout);
+    ['v1','i1','v2','i2'].forEach(k => { const el = $('in_' + k); if (document.activeElement !== el) el.value = k[0] === 'v' ? inst[k].toFixed(2) : inst[k].toFixed(3); });
+    if (document.activeElement !== $('in_gf')) $('in_gf').value = fmtHzS(inst.gf).replace('Hz', '');
+    if (document.activeElement !== $('in_ga')) $('in_ga').value = inst.ga.toFixed(3);
+    if (document.activeElement !== $('in_go')) $('in_go').value = inst.go.toFixed(2);
+    $('dmmFns').querySelectorAll('[data-fn]').forEach(b => b.setAttribute('aria-pressed', b.dataset.fn === inst.dmm));
+    $('genWaves').querySelectorAll('[data-w]').forEach(b => b.setAttribute('aria-pressed', b.dataset.w === inst.gwave));
+    $('genLoads').querySelectorAll('[data-l]').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === inst.gload));
+    $('fuseBtn').hidden = !inst.fuse;
+
+    /* 경고 */
+    const w = [];
+    if (S && !S.ok) w.push(S.err);
+    if (S && S.ok && inst.out) S.ch.forEach(c => {
+      if (c.mode === 'CC') w.push(c.same ? `전원 CH${c.k}의 +와 − 단자가 바로 이어져 있어요(단락). 전류 제한 ${c.i.toFixed(3)}A로 버티는 중이에요.`
+        : `전원 CH${c.k}이(가) 정전류(C.C) 모드예요. 전류 제한 ${c.i.toFixed(3)}A에 걸렸어요. 단락·과부하나 접지클립 위치를 확인하세요.`);
+    });
+    if (inst.fuse) w.push('멀티미터 mA 퓨즈가 끊어져 mA 단자로는 전류가 측정되지 않아요. ‘퓨즈 교체’를 누르세요.');
+    if (S && S.ok && inst.dmm !== 'dci' && Math.abs(S.imA) + Math.abs(S.i10) > 1e-3)
+      w.push('멀티미터 리드가 전류 단자(mA/10A)에 꽂혀 있어 회로를 단락시키고 있어요. 전압·저항은 VΩ 단자로 재세요.');
+    if (inst.dmm === 'dci' && used('dmmv') && !used('dmmma') && !used('dmma10'))
+      w.push('DCI 모드인데 리드가 VΩ 단자에 있어요. 전류는 mA(또는 10A)와 COM 단자로, 회로에 직렬로 연결해 재세요.');
+    if ((inst.dmm === 'ohm' || inst.dmm === 'cont') && (inst.out || inst.gout) && used('dmmv'))
+      w.push('전원이나 신호가 켜진 상태에서 저항을 재고 있어요. 저항은 출력을 끄거나 소자를 회로에서 떼고 재야 정확해요.');
+    if (inst.dmm === 'dcv' && S && S.tab && rmsAC(S.vdmS) > 0.01)
+      w.push('멀티미터가 DCV라서 교류 신호의 평균값만 보여요. 교류 크기는 ACV(실효값)로 재세요.');
+    if (S && S.ok && inst.gout && used('genp') && S.genShort)
+      w.push('신호발생기 출력(빨강)이 접지와 바로 이어져 있어요(단락). 빨강·검정 클립 위치를 확인하세요.');
+    else if (S && S.ok && inst.gout && used('genp') && S.genFloat)
+      w.push('신호발생기 신호가 돌아올 접지 경로가 없어요. 검정 클립을 회로의 기준점(접지)에 물리세요.');
+    if (S && S.ok) [1,2].forEach(k => { if (inst['on' + k] && used('sc' + k) && S.floating[k-1]) w.push(`스코프 CH${k}: 회로가 접지에 연결돼 있지 않아 측정값이 떠 있어요. 접지클립을 회로의 기준점(−)에 물리세요.`); });
+    $('instWarn').innerHTML = w.map(t => `<li>${t}</li>`).join('');
+  }
+
+  function solveAll(){ solve(); updateInstUI(); renderSchem(); updateStatus(); }
+
+  /* ---------- 회로도 ---------- */
+  function renderSchem(){
+    const find = buildNets();
+    const members = {};
+    for (const id in strips){ const r = find(id); (members[r] = members[r] || []).push(id); }
+    const infoCache = {};
+    const info = r => infoCache[r] || (infoCache[r] = (() => {
+      const m = members[r] || [r];
+      const hasPsu = m.some(s => strips[s].psu), hasGen = m.some(s => strips[s].gen);
+      return {
+        pos: m.some(s => strips[s].psu === 'p') || hasGen || (!hasPsu && m.some(s => strips[s].rail === 'p')),
+        neg: m.some(s => strips[s].psu === 'n') || (!hasPsu && !hasGen && (m.some(s => strips[s].rail === 'n') || m.includes('EARTH'))),
+        earth: m.includes('EARTH'), strips: m, rank: Math.min(...m.map(s => strips[s].rank))
+      };
+    })());
+    const netLabel = r => {
+      const I = info(r);
+      const key = I.strips.filter(s => strips[s].psu || strips[s].rail || strips[s].gen);
+      const board = I.strips.filter(s => strips[s].w);
+      const names = (key.length ? key : board.length ? board.slice().sort((a,b) => strips[a].rank - strips[b].rank) : I.strips).map(s => strips[s].name);
+      return (I.earth ? '⏚ ' : '') + (names.length > 2 ? names.slice(0,2).join(' / ') + ' 외' : names.join(' / '));
+    };
+    const showV = !!(sol && sol.ok && (inst.out || inst.gout));
+
+    const warns = [];
+    for (const r in members){ const I = info(r); if (I.pos && I.neg && members[r].some(s => strips[s].w || strips[s].psu)) warns.push('＋와 −가 바로 이어져 있어요 (전원 단락).'); }
+
+    const res = comps.filter(c => c.type === 'res');
+    if (!res.length){
+      schemSvg.hidden = true; schemEmpty.hidden = false; $('schemCount').textContent = '';
+      schemInfo.innerHTML = warns.length ? `<ul>${[...new Set(warns)].map(w => `<li class="w">${w}</li>`).join('')}</ul>` : '';
+      return;
+    }
+    schemSvg.hidden = false; schemEmpty.hidden = true;
+
+    const ends = res.map(c => ({c, na: find(HM[c.a].strip), nb: find(HM[c.b].strip)}));
+    const deg = {};
+    ends.forEach(e => { deg[e.na] = (deg[e.na] || 0) + 1; deg[e.nb] = (deg[e.nb] || 0) + 1; });
+    const par = {};
+    const f = x => { if (!(x in par)) par[x] = x; while (par[x] !== x){ par[x] = par[par[x]]; x = par[x]; } return x; };
+    ends.forEach(e => { const a = f(e.na), b = f(e.nb); if (a !== b) par[a] = b; });
+    const groups = new Map();
+    ends.forEach(e => {
+      const g = f(e.na);
+      if (!groups.has(g)) groups.set(g, {nets: new Set(), ends: []});
+      const G = groups.get(g); G.nets.add(e.na); G.nets.add(e.nb); G.ends.push(e);
+    });
+    const glist = [...groups.values()].map(G => { G.nets = [...G.nets]; G.minRank = Math.min(...G.nets.map(n => info(n).rank)); return G; })
+      .sort((a,b) => a.minRank - b.minRank);
+
+    const ROW = 80, COL = 88, TOP = 34;
+    let out = '', cx = 16, maxRows = 1, nodeCount = 0;
+    const isOpen = n => { const I = info(n); return !I.pos && !I.neg && !I.earth && deg[n] === 1 && !members[n].some(s => s[0] === 'J'); };
+
+    for (const G of glist){
+      nodeCount += G.nets.length;
+      const adj = {}; G.nets.forEach(n => adj[n] = []);
+      G.ends.forEach(e => { if (e.na !== e.nb){ adj[e.na].push(e.nb); adj[e.nb].push(e.na); } });
+      const pos = G.nets.filter(n => info(n).pos);
+      const neg = G.nets.filter(n => info(n).neg && !info(n).pos);
+      const bfs = src => { const d = {}, q = [...src]; src.forEach(s => d[s] = 0);
+        while (q.length){ const x = q.shift(); adj[x].forEach(y => { if (!(y in d)){ d[y] = d[x] + 1; q.push(y); } }); } return d; };
+      const key = {};
+      if (pos.length){
+        const d = bfs(pos); const mx = Math.max(0, ...Object.values(d));
+        G.nets.forEach(n => key[n] = neg.includes(n) ? mx + 1 : (n in d ? d[n] : mx));
+      } else if (neg.length){
+        const d = bfs(neg); G.nets.forEach(n => key[n] = -(d[n] ?? 0));
+      } else {
+        const start = G.nets.slice().sort((a,b) => info(a).rank - info(b).rank)[0];
+        const d = bfs([start]); G.nets.forEach(n => key[n] = d[n] ?? 0);
+      }
+      const order = G.nets.slice().sort((a,b) => key[a] - key[b] || info(a).rank - info(b).rank);
+      const row = {}; order.forEach((n,i) => row[n] = i);
+      maxRows = Math.max(maxRows, order.length);
+      const ref = neg.length === 1 ? neg[0] : null;
+      const vRel = n => { if (!showV) return null; const v = sol.vNet(n); if (v == null) return null; const r0 = ref ? sol.vNet(ref) : 0; return r0 == null ? null : v - r0; };
+
+      const hasSrc = pos.length === 1 && neg.length === 1;
+      const srcX = cx + 30;
+      let x = hasSrc ? srcX + 80 : cx + 44;
+      const items = G.ends.slice().sort((p,q) => {
+        const pu = Math.min(row[p.na], row[p.nb]), qu = Math.min(row[q.na], row[q.nb]);
+        const pl = Math.max(row[p.na], row[p.nb]), ql = Math.max(row[q.na], row[q.nb]);
+        return pu - qu || pl - ql || p.c.name.localeCompare(q.c.name, undefined, {numeric:true});
+      });
+      const xs = {}; G.nets.forEach(n => xs[n] = []);
+      items.forEach(it => {
+        it.x = x;
+        it.u = row[it.na] <= row[it.nb] ? it.na : it.nb;
+        it.l = it.u === it.na ? it.nb : it.na;
+        it.short = it.na === it.nb;
+        xs[it.u].push(x); xs[it.l].push(it.short ? x + 26 : x);
+        x += COL;
+      });
+      if (hasSrc){ xs[pos[0]].push(srcX); xs[neg[0]].push(srcX); }
+      const bar = {};
+      G.nets.forEach(n => {
+        const I = info(n), term = (I.pos || I.neg) && !hasSrc;
+        let mn = Math.min(...xs[n]); const mx = Math.max(...xs[n]);
+        if (term) mn -= 24;
+        bar[n] = {mn, mx, y: TOP + row[n] * ROW, term, I, open: isOpen(n)};
+      });
+
+      G.nets.forEach(n => {
+        const b = bar[n];
+        let g = `<g class="s-net" data-net="${n}">`;
+        if (b.mx > b.mn) g += `<line class="s-wire" x1="${b.mn}" y1="${b.y}" x2="${b.mx}" y2="${b.y}"/><line class="s-nethit" x1="${b.mn}" y1="${b.y}" x2="${b.mx}" y2="${b.y}"/>`;
+        if (b.term) g += `<circle class="s-term" cx="${b.mn}" cy="${b.y}" r="3.5"/>`;
+        if (b.open) g += `<circle class="s-open" cx="${b.mn}" cy="${b.y}" r="4"/>`;
+        if (b.I.earth){ const ex = b.mx + 14; g += `<path class="s-earth" d="M${b.mx} ${b.y} L${ex} ${b.y} L${ex} ${b.y+8} M${ex-8} ${b.y+8} L${ex+8} ${b.y+8} M${ex-5} ${b.y+11} L${ex+5} ${b.y+11} M${ex-2} ${b.y+14} L${ex+2} ${b.y+14}"/>`; }
+        const cls = b.I.pos ? ' pos' : b.I.neg ? ' neg' : b.open ? ' open' : '';
+        const lbl = (b.I.pos ? '＋ ' : b.I.neg ? '− ' : b.open ? '열림 · ' : '') + netLabel(n);
+        const lx = b.mn + (b.term || b.open ? -4 : 4);
+        g += `<text class="s-node${cls}" x="${lx}" y="${b.y - 7}">${lbl}</text>`;
+        const vr = vRel(n);
+        if (vr != null) g += `<text class="s-volt" x="${lx}" y="${b.y + 13}">${fmtV(vr)}</text>`;
+        [...new Set(xs[n])].forEach(xv => { if (xv > b.mn && xv < b.mx) g += `<circle class="s-dot" cx="${xv}" cy="${b.y}" r="2.8"/>`; });
+        out += g + '</g>';
+      });
+
+      if (hasSrc){
+        const yp = bar[pos[0]].y, yn = bar[neg[0]].y, mid = (yp + yn) / 2;
+        const chk = PSU.find(Pp => members[pos[0]].includes('J' + Pp.p));
+        if (!chk && members[pos[0]].includes('Jgenp')){
+          out += `<path class="s-src" d="M${srcX} ${yp} L${srcX} ${mid - 13} M${srcX} ${mid + 13} L${srcX} ${yn}"/><circle class="s-src" cx="${srcX}" cy="${mid}" r="13"/>`;
+          out += `<path class="s-src" d="M${srcX - 8} ${mid} q4 -9 8 0 t8 0"/>`;
+          out += `<text class="s-srclbl" x="${srcX + 18}" y="${mid - 3}">~ 신호발생기</text><text class="s-val" x="${srcX + 18}" y="${mid + 12}">${inst.gout ? `${fmtHzS(inst.gf)} ${inst.ga}Vpp` : 'OFF'}</text>`;
+        } else {
+        const lab = chk ? `CH${chk.k}` : '전원';
+        const vtxt = chk ? (inst.out ? `${(chk.k === 3 ? 5 : inst['v' + chk.k]).toFixed(2)}V` : 'OFF') : '';
+        out += `<path class="s-src" d="M${srcX} ${yp} L${srcX} ${mid - 5} M${srcX} ${mid + 5} L${srcX} ${yn}"/>`;
+        out += `<line class="s-src" x1="${srcX - 13}" x2="${srcX + 13}" y1="${mid - 5}" y2="${mid - 5}"/>`;
+        out += `<line class="s-src short" x1="${srcX - 7}" x2="${srcX + 7}" y1="${mid + 5}" y2="${mid + 5}"/>`;
+        out += `<text class="s-srclbl" x="${srcX + 17}" y="${mid - 3}">+ ${lab}</text><text class="s-val" x="${srcX + 17}" y="${mid + 12}">${vtxt}</text>`;
+        }
+      }
+
+      const zig = (x, y0, len) => { const n = 6, h = len / n; let d = ` L${x} ${y0}`; for (let i = 0; i < n; i++) d += ` L${x + (i % 2 ? -6 : 6)} ${(y0 + h * (i + 0.5)).toFixed(1)}`; return d + ` L${x} ${y0 + len}`; };
+      items.forEach(it => {
+        const c = it.c, x = it.x, yu = bar[it.u].y;
+        const cls = `s-res${c.id === selId ? ' sel' : ''}${it.short ? ' warn' : ''}`;
+        let g = `<g class="${cls}" data-cid="${c.id}">`;
+        let cur = '';
+        if (showV){ const va = sol.vNet(it.na), vb = sol.vNet(it.nb); if (va != null && vb != null) cur = fmtI(Math.abs(va - vb) / c.value); }
+        if (it.short){
+          const d = `M${x} ${yu}` + zig(x, yu + 12, 34) + ` L${x} ${yu + 56} L${x + 26} ${yu + 56} L${x + 26} ${yu}`;
+          g += `<path class="s-wire" d="${d}"/><rect class="s-hit" x="${x - 10}" y="${yu}" width="46" height="58"/>`;
+          g += `<text class="s-lbl" x="${x + 32}" y="${yu + 30}">${c.name} 단락</text><text class="s-val" x="${x + 32}" y="${yu + 43}">${fmt(c.value)}</text>`;
+        } else {
+          const yl = bar[it.l].y, b0 = yu + ROW / 2 - 17, b1 = b0 + 34;
+          let d = `M${x} ${yu}` + zig(x, b0, 34);
+          G.nets.filter(n => n !== it.u && n !== it.l && bar[n].y > b1 && bar[n].y < yl && bar[n].mn <= x && bar[n].mx >= x)
+            .map(n => bar[n].y).sort((a,b) => a - b)
+            .forEach(yc => d += ` L${x} ${yc - 5} A5 5 0 0 1 ${x} ${yc + 5}`);
+          d += ` L${x} ${yl}`;
+          g += `<path class="s-wire" d="${d}"/><rect class="s-hit" x="${x - 10}" y="${yu}" width="20" height="${yl - yu}"/>`;
+          g += `<text class="s-lbl" x="${x + 12}" y="${yu + ROW / 2 - 5}">${c.name}</text><text class="s-val" x="${x + 12}" y="${yu + ROW / 2 + 8}">${fmt(c.value)}</text>`;
+          if (cur) g += `<text class="s-cur" x="${x + 12}" y="${yu + ROW / 2 + 20}">${cur}</text>`;
+        }
+        out += g + '</g>';
+      });
+
+      const right = Math.max(x - COL + 80, ...G.nets.map(n => bar[n].mx + 80));
+      cx = right + 20;
+    }
+
+    const vw = Math.max(cx, 200), vh = TOP + (maxRows - 1) * ROW + 78;
+    schemSvg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+    schemSvg.setAttribute('width', vw);
+    schemSvg.setAttribute('height', vh);
+    schemSvg.innerHTML = out;
+    $('schemCount').textContent = `노드 ${nodeCount} · 저항 ${res.length}`;
+
+    ends.forEach(e => {
+      if (e.na === e.nb) warns.push(`${e.c.name}: 두 다리가 같은 노드에 있어 단락됩니다.`);
+      [[e.na, e.c.a], [e.nb, e.c.b]].forEach(([n, hid]) => { if (isOpen(n)) warns.push(`${e.c.name}: ${HM[hid].label} 쪽 다리가 다른 곳과 연결되지 않았어요.`); });
+    });
+    let h = warns.length ? `<ul>${[...new Set(warns)].map(w => `<li class="w">${w}</li>`).join('')}</ul>` : '<p class="ok" style="margin:0">단락이나 떠 있는 다리가 없어요.</p>';
+    h += `<p class="note">${showV ? `파란 숫자는 계산된 노드 전압(− 단자 기준)과 저항 전류예요${inst.gout ? '(신호발생기가 켜져 있으면 직류 평균값)' : ''}. ` : ''}점퍼선·리드선은 도선으로 합쳐지고, 계기는 회로도에 그리지 않아요. 선이 반원으로 넘어가는 곳은 연결되지 않은 교차입니다.</p>`;
+    schemInfo.innerHTML = h;
+  }
+  schemSvg.addEventListener('click', e => { const g = e.target.closest('[data-cid]'); if (g){ if (mode !== 'select') setMode('select'); select(g.dataset.cid); } });
+  schemSvg.addEventListener('pointerover', e => { const g = e.target.closest('[data-net]'); const n = g ? g.dataset.net : null; if (n !== schemFocus){ schemFocus = n; updateHighlights(); } });
+  schemSvg.addEventListener('pointerleave', () => { schemFocus = null; updateHighlights(); });
+
+  /* ---------- 목록·선택 패널 ---------- */
+  function renderList(){
+    const find = buildNets();
+    const nr = comps.filter(c => c.type === 'res').length, nw = comps.length - nr;
+    $('count').textContent = `저항 ${nr} · 선 ${nw}`;
+    if (!comps.length){ list.innerHTML = '<li><p class="empty">아직 배치된 부품이 없어요. 위에서 ‘저항 놓기’나 ‘점퍼선·리드선’을 고른 뒤 구멍을 클릭하세요.</p></li>'; return; }
+    list.innerHTML = comps.map(c => {
+      const ico = c.type === 'res' ? '<i class="ico res"></i>' : `<i class="ico wire" style="background:${WC[c.color].hex}"></i>`;
+      const val = c.type === 'res' ? fmt(c.value) : (HM[c.a].jack || HM[c.b].jack ? '리드선' : WC[c.color].name);
+      const tag = isShort(c, find) ? '<span class="tag">단락</span>' : '';
+      return `<li><button type="button" class="item${c.id === selId ? ' on' : ''}" data-cid="${c.id}">${ico}<span class="nm">${c.name}</span><span class="val">${val}${tag}</span><span class="pos">${HM[c.a].label} ↔ ${HM[c.b].label}</span></button></li>`;
+    }).join('');
+  }
+  list.addEventListener('click', e => { const b = e.target.closest('[data-cid]'); if (b) select(b.dataset.cid); });
+
+  const chipsHTML = () => PRESETS.map(p => `<button type="button" class="chip" data-v="${p}">${p}</button>`).join('');
+  const swatchHTML = cur => Object.entries(WC).map(([k,v]) =>
+    `<button type="button" class="sw" data-color="${k}" style="background:${v.hex}" aria-pressed="${k === cur}" aria-label="${v.name}" title="${v.name}"></button>`).join('');
+
+  function renderSel(){
+    const c = getC(selId);
+    if (!c){ selBox.innerHTML = '<p class="empty">보드나 회로도에서 부품을 클릭하면 여기서 저항값·색을 바꾸거나 삭제할 수 있어요.</p>'; return; }
+    const pos = `<p class="pos-line">위치 <code>${HM[c.a].label}</code> ↔ <code>${HM[c.b].label}</code></p>`;
+    if (c.type === 'res'){
+      selBox.innerHTML = `<div class="sel-title"><b>${c.name}</b><span>저항</span></div>
+        <label class="lbl" for="selValue">저항값 (예: 220, 1k, 4.7k, 10kΩ)</label>
+        <input id="selValue" class="txt" type="text" value="${fmt(c.value)}" autocomplete="off" spellcheck="false">
+        <div class="chips" id="selChips">${chipsHTML()}</div>
+        <p class="err" id="selErr" hidden></p>
+        <span class="lbl">색띠 (4띠 저항)</span>
+        <div class="bands" id="selBands"></div>
+        ${pos}<p class="warnline" id="selWarn" hidden></p>
+        <button type="button" class="btn danger" id="delBtn">이 저항 삭제</button>`;
+      const inp = $('selValue');
+      const apply = v => { c.value = v; save(); render(); renderList(); solveAll(); updateBands(c); };
+      inp.addEventListener('input', () => {
+        const v = parseR(inp.value), err = $('selErr');
+        if (v){ err.hidden = true; inp.removeAttribute('aria-invalid'); apply(v); }
+        else { err.hidden = false; err.textContent = '숫자와 단위로 입력하세요. 예: 220, 1k, 4.7k, 10kΩ, 1M'; inp.setAttribute('aria-invalid','true'); }
+      });
+      inp.addEventListener('change', () => { if (parseR(inp.value)) inp.value = fmt(c.value); });
+      $('selChips').addEventListener('click', e => {
+        const b = e.target.closest('[data-v]'); if (!b) return;
+        inp.value = b.dataset.v; $('selErr').hidden = true; inp.removeAttribute('aria-invalid'); apply(parseR(b.dataset.v));
+      });
+      updateBands(c);
+    } else {
+      const isLead = HM[c.a].jack || HM[c.b].jack;
+      selBox.innerHTML = `<div class="sel-title"><b>${c.name}</b><span>${isLead ? '리드선' : '점퍼선'}</span></div>
+        <span class="lbl">색</span>
+        <div class="swatches" id="selColors">${swatchHTML(c.color)}</div>
+        ${pos}
+        <button type="button" class="btn danger" id="delBtn">이 선 삭제</button>`;
+      $('selColors').addEventListener('click', e => {
+        const b = e.target.closest('[data-color]'); if (!b) return;
+        c.color = b.dataset.color; save(); render(); renderList();
+        $('selColors').querySelectorAll('.sw').forEach(x => x.setAttribute('aria-pressed', x.dataset.color === c.color));
+      });
+    }
+    $('delBtn').addEventListener('click', () => del(c.id));
+  }
+  function updateBands(c){
+    const el = $('selBands'); if (!el) return;
+    const b = bands(c.value);
+    if (!b) el.innerHTML = '<span>이 값은 4띠 색 코드로 표시할 수 없어요.</span>';
+    else el.innerHTML = b.list.map(x => `<span class="band"><i style="background:${x[1]}"></i>${x[0]}</span>`).join('') +
+      (Math.abs(b.approx - c.value) > c.value * 1e-6 ? `<span>※ 4띠로는 ${fmt(b.approx)}로 읽혀요</span>` : '');
+    const w = $('selWarn');
+    if (w){ const sh = isShort(c, buildNets()); w.hidden = !sh; w.textContent = sh ? '두 다리가 같은 줄(또는 선으로 이어진 줄)에 있어 저항이 단락됩니다. 한쪽 다리를 다른 행으로 옮기세요.' : ''; }
+  }
+
+  function renderAll(){ render(); renderSel(); renderList(); solveAll(); }
+
+  /* ---------- 동작 ---------- */
+  function select(id){ selId = id; renderSel(); renderList(); render(); renderSchem(); }
+  function del(id){
+    const c = getC(id); if (!c) return;
+    comps = comps.filter(x => x.id !== id); if (selId === id) selId = null;
+    save(); renderAll(); toast(`${c.name}을(를) 삭제했어요.`);
+  }
+  function setMode(m){
+    mode = m; pending = null; downHole = null;
+    document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+    svg.classList.toggle('placing', m !== 'select');
+    render();
+  }
+  function tryPlace(h1, h2){
+    if (h1 === h2) return false;
+    const o = occ();
+    if (taken(o, h2)){ toast(`${h2.label} 구멍에는 이미 ${o[h2.id].name} 다리가 꽂혀 있어요.`); return false; }
+    const c = mode === 'res'
+      ? {id: uid(), type:'res', a:h1.id, b:h2.id, value:newVal, name: nextName('res')}
+      : {id: uid(), type:'wire', a:h1.id, b:h2.id, color: leadColor(h1, h2), name: nextName('wire')};
+    comps.push(c); pending = null; selId = c.id;
+    save(); renderAll();
+    if (isShort(c, buildNets())) toast(`⚠ ${c.name}의 두 다리가 같은 줄에 있어 단락돼요.`);
+    return true;
+  }
+  function nearest(x, y, th = 10){
+    let best = null, bd = th * th;
+    for (const h of holes){ const d = (h.x - x) ** 2 + (h.y - y) ** 2; if (d < bd){ bd = d; best = h; } }
+    return best;
+  }
+  function svgPt(e){ const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+  function setHover(h){
+    if (h === hover) return;
+    hover = h;
+    if (h){ const r = h.jack ? 11 : 6.5; ring.setAttribute('x', h.x - r); ring.setAttribute('y', h.y - r); ring.setAttribute('width', r * 2); ring.setAttribute('height', r * 2); ring.setAttribute('rx', h.jack ? r : 3); }
+    else { ring.setAttribute('x', -50); ring.setAttribute('y', -50); }
+    if (pending || drag) render(); else { updateHighlights(); updateStatus(); }
+  }
+  function checkDrag(){
+    const o = occ(drag.id);
+    drag.valid = !!(drag.a && drag.b && drag.a !== drag.b && !taken(o, drag.a) && !taken(o, drag.b));
+  }
+
+  /* 계기 조작 */
+  const clampSet = (k, v) => {
+    if (k[0] === 'v') inst[k] = Math.min(30, Math.max(0, Math.round(v * 100) / 100));
+    else inst[k] = Math.min(5, Math.max(0.001, Math.round(v * 1000) / 1000));
+  };
+  function setGen(key, v){
+    if (!isFinite(v)) return;
+    const L = GLIM();
+    if (key === 'gf') inst.gf = Math.min(inst.gwave === 'tri' ? 1e6 : 5e6, Math.max(0.1, +(+v).toPrecision(4)));
+    else if (key === 'ga') inst.ga = Math.min(Math.max(0.001, 2 * (L - Math.abs(inst.go))), Math.max(0.001, Math.round(v * 1000) / 1000));
+    else if (key === 'go'){ const lim = Math.max(0, L - inst.ga / 2); inst.go = Math.max(-lim, Math.min(lim, Math.round(v * 100) / 100)); }
+  }
+  const knobBase = k => k === 'gen' ? inst[GKEY[inst.gsel]] : inst[k];
+  function knobApply(k, base, u){
+    if (k === 'gen'){
+      if (inst.gsel === 'f') setGen('gf', base * Math.pow(10, u * 0.01));
+      else setGen(GKEY[inst.gsel], base + u * 0.01);
+    } else clampSet(k, base + u * (k[0] === 'v' ? 0.05 : 0.005));
+  }
+  function instChanged(){ persist(); solveAll(); }
+  function handleCtl(ctl, e, p){
+    const t = ctl.dataset.ctl;
+    if (t === 'knob'){
+      const k = ctl.dataset.k;
+      knobDrag = {k, y0: p.y, v0: knobBase(k)};
+      svg.setPointerCapture(e.pointerId); e.preventDefault(); updateStatus();
+      return;
+    }
+    if (t === 'out') inst.out = !inst.out;
+    else if (t === 'gout') inst.gout = !inst.gout;
+    else if (t === 'wave'){ inst.gwave = ctl.dataset.w; setGen('gf', inst.gf); }
+    else if (t === 'gpar') inst.gsel = ctl.dataset.p;
+    else if (t === 'fn') inst.dmm = ctl.dataset.fn;
+    else if (t === 'ch'){ const k = ctl.dataset.ch; inst['on' + k] = !inst['on' + k]; }
+    else if (t === 'cp'){ const k = ctl.dataset.ch; inst['cp' + k] = inst['cp' + k] === 'DC' ? 'AC' : 'DC'; }
+    else if (t === 'vdiv'){
+      const k = ctl.dataset.ch, i = VDIVS.indexOf(inst['vd' + k]);
+      inst['vd' + k] = VDIVS[Math.min(VDIVS.length - 1, Math.max(0, (i < 0 ? 7 : i) + (+ctl.dataset.d)))];
+    } else if (t === 'time'){
+      const i = TDIVS.indexOf(inst.td);
+      inst.td = TDIVS[Math.min(TDIVS.length - 1, Math.max(0, (i < 0 ? 7 : i) + (+ctl.dataset.d)))];
+    } else if (t === 'auto') autoScale();
+    e.preventDefault();
+    instChanged();
+  }
+  function autoScale(){
+    if (!sol || !sol.ok) return;
+    [1,2].forEach(k => {
+      if (!inst['on' + k]) return;
+      const st = scStats(k), pos = k === 1 ? 1 : -2, off = inst['cp' + k] === 'AC' ? st.m : 0;
+      inst['vd' + k] = VDIVS.find(vd => pos + (st.mx - off) / vd <= 3.6 && pos + (st.mn - off) / vd >= -3.6) || 10;
+    });
+    if (sol.tab && inst.gf > 0){ const want = 2.5 / inst.gf / 10; inst.td = TDIVS.find(t => t >= want) || TDIVS[TDIVS.length - 1]; }
+    toast('Auto Scale: 파형이 화면에 들어오도록 V/div와 시간축을 맞췄어요.');
+  }
+  svg.addEventListener('wheel', e => {
+    const kn = e.target.closest('[data-ctl="knob"]'); if (!kn) return;
+    e.preventDefault();
+    const k = kn.dataset.k;
+    knobApply(k, knobBase(k), (e.deltaY < 0 ? 2 : -2) * (e.shiftKey ? 0.1 : 1));
+    instChanged();
+  }, {passive:false});
+
+  svg.addEventListener('pointerdown', e => {
+    if (e.button > 0) return;
+    const p = svgPt(e);
+    const ctl = e.target.closest('[data-ctl]');
+    if (ctl){ handleCtl(ctl, e, p); return; }
+    const h = nearest(p.x, p.y);
+    if (mode === 'select'){
+      const g = e.target.closest('[data-cid]'), hd = e.target.closest('[data-end]');
+      if (g){
+        const c = getC(g.dataset.cid); if (!c) return;
+        if (selId !== c.id){ selId = c.id; renderSel(); renderList(); renderSchem(); }
+        drag = {id:c.id, end: hd ? hd.dataset.end : null, sx:p.x, sy:p.y, oa:HM[c.a], ob:HM[c.b], a:HM[c.a], b:HM[c.b], moved:false, valid:true};
+        svg.setPointerCapture(e.pointerId); svg.classList.add('dragging');
+        render(); e.preventDefault();
+      } else if (selId){ select(null); }
+      return;
+    }
+    if (!h) return;
+    if (!pending){
+      const o = occ();
+      if (taken(o, h)){ toast(`${h.label} 구멍에는 이미 ${o[h.id].name} 다리가 꽂혀 있어요.`); return; }
+      pending = h; downHole = h;
+      svg.setPointerCapture(e.pointerId);
+      render(); e.preventDefault();
+    } else {
+      if (h === pending){ pending = null; downHole = null; render(); return; }
+      tryPlace(pending, h); downHole = null;
+    }
+  });
+
+  svg.addEventListener('pointermove', e => {
+    const p = svgPt(e);
+    if (knobDrag){
+      knobApply(knobDrag.k, knobDrag.v0, knobDrag.y0 - p.y);
+      solve(); updateInstUI(); updateStatus();
+      return;
+    }
+    if (drag){
+      const dx = p.x - drag.sx, dy = p.y - drag.sy;
+      if (!drag.moved && Math.hypot(dx, dy) > 4) drag.moved = true;
+      if (drag.moved){
+        if (drag.end){
+          const cand = nearest(p.x, p.y, 14);
+          if (cand) drag[drag.end] = cand;
+          checkDrag(); if (!cand) drag.valid = false;
+        } else {
+          const ca = nearest(drag.oa.x + dx, drag.oa.y + dy, 14), cb = nearest(drag.ob.x + dx, drag.ob.y + dy, 14);
+          if (ca && cb){ drag.a = ca; drag.b = cb; checkDrag(); } else drag.valid = false;
+        }
+      }
+      hover = nearest(p.x, p.y);
+      render();
+      return;
+    }
+    setHover(nearest(p.x, p.y));
+  });
+
+  function endPointer(e, cancel){
+    if (knobDrag){ knobDrag = null; instChanged(); return; }
+    if (drag){
+      const c = getC(drag.id);
+      if (c && drag.moved && !cancel){
+        if (drag.valid){
+          if (c.a !== drag.a.id || c.b !== drag.b.id){ c.a = drag.a.id; c.b = drag.b.id; save(); }
+        } else toast('그 위치에는 놓을 수 없어요. 원래 자리로 돌아갑니다.');
+      }
+      drag = null; svg.classList.remove('dragging');
+      renderAll(); return;
+    }
+    if (pending && downHole && !cancel){
+      const p = svgPt(e), h = nearest(p.x, p.y);
+      if (h && h !== downHole) tryPlace(pending, h);
+    }
+    downHole = null;
+  }
+  svg.addEventListener('pointerup', e => endPointer(e, false));
+  svg.addEventListener('pointercancel', e => endPointer(e, true));
+  svg.addEventListener('pointerleave', () => { if (!drag && !knobDrag) setHover(null); });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea')){ if (e.key === 'Escape') e.target.blur(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Delete' || e.key === 'Backspace'){ if (selId){ del(selId); e.preventDefault(); } }
+    else if (e.key === 'Escape'){ pending = null; downHole = null; if (drag){ drag = null; svg.classList.remove('dragging'); } select(null); }
+    else { const k = e.key.toLowerCase(); if (k === 'v') setMode('select'); else if (k === 'r') setMode('res'); else if (k === 'w') setMode('wire'); }
+  });
+
+  /* ---------- 툴바·패널 ---------- */
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  $('showStrips').addEventListener('change', e => svg.classList.toggle('show-strips', e.target.checked));
+  $('resetBtn').addEventListener('click', () => { $('resetBtn').hidden = true; $('resetConfirm').hidden = false; $('resetNo').focus(); });
+  $('resetNo').addEventListener('click', () => { $('resetConfirm').hidden = true; $('resetBtn').hidden = false; });
+  $('resetYes').addEventListener('click', () => {
+    comps = []; selId = null; pending = null; downHole = null;
+    save(); renderAll();
+    $('resetConfirm').hidden = true; $('resetBtn').hidden = false;
+    toast('브레드보드와 리드선을 모두 비웠어요. 계기 설정은 그대로예요.');
+  });
+
+  ['v1','i1','v2','i2'].forEach(k => $('in_' + k).addEventListener('change', e => { const v = parseFloat(e.target.value); if (isFinite(v)){ clampSet(k, v); instChanged(); } }));
+  $('outBtn').addEventListener('click', () => { inst.out = !inst.out; instChanged(); });
+  $('dmmFns').innerHTML = [['dcv','DCV'],['acv','ACV'],['dci','DCI'],['ohm','Ω'],['cont','통전']].map(([f, l]) => `<button type="button" class="chip" data-fn="${f}">${l}</button>`).join('');
+  $('dmmFns').addEventListener('click', e => { const b = e.target.closest('[data-fn]'); if (b){ inst.dmm = b.dataset.fn; instChanged(); } });
+  $('genOutBtn').addEventListener('click', () => { inst.gout = !inst.gout; instChanged(); });
+  $('genWaves').innerHTML = [['sine','∿ 사인파'],['square','⊓ 구형파'],['tri','⋀ 삼각파']].map(([w, l]) => `<button type="button" class="chip" data-w="${w}">${l}</button>`).join('');
+  $('genWaves').addEventListener('click', e => { const b = e.target.closest('[data-w]'); if (b){ inst.gwave = b.dataset.w; setGen('gf', inst.gf); instChanged(); } });
+  $('genLoads').innerHTML = [['50','50Ω 기준'],['hiz','High-Z 기준']].map(([l, t]) => `<button type="button" class="chip" data-l="${l}">${t}</button>`).join('');
+  $('genLoads').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (b){ inst.gload = b.dataset.l; setGen('ga', inst.ga); setGen('go', inst.go); instChanged(); } });
+  const parseHz = str => { const m = String(str).trim().replace(/\s+/g,'').replace(/hz$/i,'').match(/^(\d+(?:\.\d+)?|\.\d+)([kKM]?)$/); return m ? parseFloat(m[1]) * {'':1,k:1e3,K:1e3,M:1e6}[m[2]] : NaN; };
+  $('in_gf').addEventListener('change', e => { const v = parseHz(e.target.value); if (isFinite(v) && v > 0){ setGen('gf', v); instChanged(); } else toast('주파수는 1000, 1k, 2.5k, 1M처럼 입력하세요.'); });
+  $('in_ga').addEventListener('change', e => { setGen('ga', parseFloat(e.target.value)); instChanged(); });
+  $('in_go').addEventListener('change', e => { setGen('go', parseFloat(e.target.value)); instChanged(); });
+  $('fuseBtn').addEventListener('click', () => { inst.fuse = false; instChanged(); toast('mA 퓨즈를 새것으로 교체했어요.'); });
+
+  const newInp = $('newValue');
+  const newChips = document.querySelector('.chips[data-target="new"]');
+  newChips.innerHTML = chipsHTML();
+  newChips.addEventListener('click', e => {
+    const b = e.target.closest('[data-v]'); if (!b) return;
+    newInp.value = b.dataset.v; newVal = parseR(b.dataset.v); $('newErr').hidden = true; newInp.removeAttribute('aria-invalid');
+    if (mode !== 'res') setMode('res'); else render();
+  });
+  newInp.addEventListener('input', () => {
+    const v = parseR(newInp.value), err = $('newErr');
+    if (v){ newVal = v; err.hidden = true; newInp.removeAttribute('aria-invalid'); render(); }
+    else { err.hidden = false; err.textContent = '숫자와 단위로 입력하세요. 예: 220, 1k, 4.7k, 10kΩ'; newInp.setAttribute('aria-invalid','true'); }
+  });
+  newInp.addEventListener('change', () => { if (parseR(newInp.value)) newInp.value = fmt(newVal); });
+
+  const wcBox = $('wireColors');
+  wcBox.innerHTML = swatchHTML(wireColor);
+  wcBox.addEventListener('click', e => {
+    const b = e.target.closest('[data-color]'); if (!b) return;
+    wireColor = b.dataset.color;
+    wcBox.querySelectorAll('.sw').forEach(x => x.setAttribute('aria-pressed', x.dataset.color === wireColor));
+    if (mode !== 'wire') setMode('wire'); else render();
+  });
+
+  let toastT;
+  function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2800); }
+
+  /* ---------- 시작 ---------- */
+  if (!load()){ comps = EXAMPLE.map(c => ({...c})); example = true; }
+  exNote.hidden = !example;
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
